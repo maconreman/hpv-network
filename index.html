@@ -59,9 +59,25 @@
     border-radius:8px;font-size:13px;color:var(--muted);
   }
 
-  /* ---------- Network Analysis Results page (full-bleed, own layout) ---------- */
-  #page-network{padding:0;max-width:none;display:none;}
-  #page-network.active{display:flex;flex-direction:column;height:100%;}
+  /* ---------- Results pages (Facebook / TikTok) — full-bleed, own layout ---------- */
+  .results-page{padding:0;max-width:none;display:none;}
+  .results-page.active{display:flex;flex-direction:column;height:100%;}
+
+  /* Sub-nav: Network Analysis / Topic Modeling, scoped within one platform's results page */
+  .subnav{
+    display:flex;gap:2px;padding:12px 20px 0 20px;border-bottom:1px solid var(--panel-line);flex:none;background:#fff;
+  }
+  .subnav button{
+    font-family:var(--sans);font-size:13px;background:none;border:none;color:var(--muted);
+    padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;
+  }
+  .subnav button.active{color:var(--ink);font-weight:600;border-bottom-color:var(--accent);}
+
+  .sub-page{display:none;flex:1;min-height:0;flex-direction:column;}
+  .sub-page.active{display:flex;}
+
+  .topics-sub-page{display:none;flex:1;min-height:0;overflow-y:auto;padding:32px 40px;max-width:760px;}
+  .topics-sub-page.active{display:block;}
 
   #graph-container{position:relative;flex:1;background:#fbfcfc;min-height:0;}
 
@@ -72,68 +88,67 @@
   .net-header h2{font-size:14px;margin:0 0 2px 0;}
   .net-header .sub{font-family:var(--mono);font-size:10px;color:var(--muted);}
 
-  #platform-toggle{display:flex;gap:2px;background:var(--panel);border:1px solid var(--panel-line);border-radius:8px;padding:3px;}
-  #platform-toggle button{
-    font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
-    background:transparent;border:none;color:var(--muted);padding:8px 16px;border-radius:6px;cursor:pointer;
-  }
-  #platform-toggle button.active{background:var(--accent);color:#fff;font-weight:600;}
-
-  #expand-control{display:none;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted);}
-  #expand-control.visible{display:flex;}
-  #expand-control button{
+  .expand-control{display:none;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted);}
+  .expand-control.visible{display:flex;}
+  .expand-control button{
     background:var(--panel);border:1px solid var(--panel-line);color:var(--ink);
     font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:6px;cursor:pointer;
   }
-  #expand-control button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .expand-control button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-  #left-rail{
+  .left-rail{
     position:absolute;left:16px;bottom:16px;z-index:10;width:250px;
     background:#ffffff;border:1px solid var(--panel-line);border-radius:10px;
     padding:16px;font-size:12px;max-height:60%;overflow-y:auto;
     box-shadow:0 2px 10px rgba(0,0,0,0.06);
   }
-  #left-rail h3{margin:0 0 10px 0;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .left-rail h3{margin:0 0 10px 0;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;}
   .stat-row{display:flex;justify-content:space-between;padding:3px 0;font-family:var(--mono);}
   .stat-row span:first-child{color:var(--muted);}
   .stat-row span:last-child{color:var(--ink);text-align:right;}
   .divider{height:1px;background:var(--panel-line);margin:10px 0;}
 
-  #legend{display:flex;flex-direction:column;gap:6px;margin-top:2px;}
+  .legend{display:flex;flex-direction:column;gap:6px;margin-top:2px;}
   .legend-item{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted);}
   .legend-dot{width:9px;height:9px;border-radius:50%;flex:none;}
 
-  #fb-note{margin-top:8px;padding:10px;background:var(--panel);border:1px solid var(--panel-line);border-radius:6px;font-size:11px;line-height:1.5;color:var(--muted);display:none;}
-  #fb-note.visible{display:block;}
-  #fb-note code{font-family:var(--mono);font-size:10px;color:var(--ink);}
+  .fb-note{margin-top:8px;padding:10px;background:var(--panel);border:1px solid var(--panel-line);border-radius:6px;font-size:11px;line-height:1.5;color:var(--muted);display:none;}
+  .fb-note.visible{display:block;}
+  .fb-note code{font-family:var(--mono);font-size:10px;color:var(--ink);}
 
-  #search-box{position:absolute;right:16px;top:16px;z-index:10;width:230px;}
-  #search-box input{
+  .search-box{position:absolute;right:16px;top:16px;z-index:10;width:230px;}
+  .search-box input{
     width:100%;background:#fff;border:1px solid var(--panel-line);border-radius:8px;
     padding:10px 12px;color:var(--ink);font-family:var(--mono);font-size:12px;outline:none;
   }
-  #search-box input:focus{border-color:var(--accent);}
-  #search-results{margin-top:4px;background:#fff;border:1px solid var(--panel-line);border-radius:8px;max-height:220px;overflow-y:auto;display:none;box-shadow:0 2px 10px rgba(0,0,0,0.08);}
-  #search-results div{padding:8px 12px;font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--ink);}
-  #search-results div:hover{background:var(--panel);}
+  .search-box input:focus{border-color:var(--accent);}
+  .search-results{margin-top:4px;background:#fff;border:1px solid var(--panel-line);border-radius:8px;max-height:220px;overflow-y:auto;display:none;box-shadow:0 2px 10px rgba(0,0,0,0.08);}
+  .search-results div{padding:8px 12px;font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--ink);}
+  .search-results div:hover{background:var(--panel);}
 
-  #info-panel{
+  .info-panel{
     position:absolute;right:16px;bottom:16px;z-index:10;width:260px;background:#fff;
     border:1px solid var(--panel-line);border-radius:10px;padding:16px;display:none;
     box-shadow:0 2px 10px rgba(0,0,0,0.06);
   }
-  #info-panel.visible{display:block;}
-  #info-panel .name{font-size:14px;font-weight:600;color:var(--ink);word-break:break-word;margin-bottom:2px;}
-  #info-panel .tag{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
-  #info-panel .metric{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;padding:3px 0;}
-  #info-panel .metric span:first-child{color:var(--muted);}
-  #info-panel .close-btn{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0;}
-  #info-panel .close-btn:hover{color:var(--ink);}
+  .info-panel.visible{display:block;}
+  .info-panel .name{font-size:14px;font-weight:600;color:var(--ink);word-break:break-word;margin-bottom:2px;}
+  .info-panel .tag{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+  .info-panel .metric{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;padding:3px 0;}
+  .info-panel .metric span:first-child{color:var(--muted);}
+  .info-panel .close-btn{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0;}
+  .info-panel .close-btn:hover{color:var(--ink);}
 
-  #loading, #empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;text-align:center;padding:20px;background:#fbfcfc;}
-  #loading .mark, #empty-state .mark{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
-  #empty-state .mark{color:var(--ink);max-width:420px;line-height:1.6;}
-  #empty-state{display:none;}
+  .loading, .empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;text-align:center;padding:20px;background:#fbfcfc;}
+  .loading .mark, .empty-state .mark{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+  .empty-state .mark{color:var(--ink);max-width:420px;line-height:1.6;}
+  .empty-state{display:none;}
+
+  /* ---------- Topic modeling embed (iframe) ---------- */
+  .topic-embed-wrap{margin-top:18px;border:1px solid var(--panel-line);border-radius:10px;overflow:hidden;background:#fff;}
+  .topic-embed-wrap iframe{width:100%;height:900px;border:none;display:block;}
+  .topic-embed-fallback{padding:28px 24px;font-size:13px;color:var(--muted);line-height:1.6;background:var(--panel);}
+  .topic-embed-fallback code{font-family:var(--mono);font-size:11.5px;color:var(--ink);background:#fff;padding:2px 5px;border-radius:4px;border:1px solid var(--panel-line);}
 
   ::-webkit-scrollbar{width:6px;}
   ::-webkit-scrollbar-thumb{background:var(--panel-line);border-radius:3px;}
@@ -154,10 +169,12 @@
     #nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:90;}
     #nav-overlay.visible{display:block;}
     .page{padding:64px 20px 24px 20px;}
-    .net-header{padding-left:56px;flex-wrap:wrap;gap:8px;}
-    #search-box{width:calc(100vw - 32px);left:16px;right:16px;top:auto;bottom:auto;position:absolute;top:64px;}
-    #left-rail{width:calc(100vw - 32px);left:16px;right:16px;max-height:40%;bottom:auto;top:calc(64px + 54px);}
-    #info-panel{width:calc(100vw - 32px);left:16px;right:16px;}
+    .subnav{padding-left:56px;}
+    .net-header{padding-left:20px;flex-wrap:wrap;gap:8px;}
+    .search-box{width:calc(100vw - 32px);left:16px;right:16px;top:auto;bottom:auto;position:absolute;top:16px;}
+    .left-rail{width:calc(100vw - 32px);left:16px;right:16px;max-height:40%;bottom:auto;top:calc(16px + 54px);}
+    .info-panel{width:calc(100vw - 32px);left:16px;right:16px;}
+    .topics-sub-page{padding:64px 20px 24px 20px;}
   }
 </style>
 </head>
@@ -173,8 +190,8 @@
     <button data-page="background">Background</button>
     <button data-page="problem">Research Problem</button>
     <button data-page="methods">Methods</button>
-    <button data-page="network">Network Analysis Results</button>
-    <button data-page="topics">Topic Modeling Results <span class="tbd-flag">TBD</span></button>
+    <button data-page="facebook-results">Facebook Results</button>
+    <button data-page="tiktok-results">TikTok Results</button>
     <button data-page="discussion">Discussion <span class="tbd-flag">TBD</span></button>
   </nav>
 
@@ -216,61 +233,136 @@
       <p><strong>Topic modeling.</strong> The original study used BERTopic (with class-based TF-IDF term weighting) in multilingual mode, since posts appear in both English and Filipino.</p>
     </section>
 
-    <section class="page" id="page-network">
-      <div class="net-header">
-        <div>
-          <h2>Network Analysis Results</h2>
-          <div class="sub" id="platform-sub">facebook_nodes.json / facebook_edges.json</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;">
-          <div id="expand-control">
-            <span>Expand:</span>
-            <button data-factor="1" class="active">1x</button>
-            <button data-factor="1.5">1.5x</button>
-            <button data-factor="2">2x</button>
+    <!-- ============================= FACEBOOK RESULTS ============================= -->
+    <section class="page results-page" id="page-facebook-results">
+      <div class="subnav" data-platform="facebook">
+        <button data-sub="network" class="active">Network Analysis</button>
+        <button data-sub="topics">Topic Modeling <span class="tbd-flag">TBD</span></button>
+      </div>
+
+      <div class="sub-page active" id="facebook-network-sub">
+        <div class="net-header">
+          <div>
+            <h2>Facebook &mdash; Network Analysis</h2>
+            <div class="sub">facebook_nodes.json / facebook_edges.json</div>
           </div>
-          <div id="platform-toggle">
-            <button id="btn-facebook" class="active">Facebook</button>
-            <button id="btn-tiktok">TikTok</button>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="expand-control" id="expand-control-facebook">
+              <span>Expand:</span>
+              <button data-factor="1" class="active">1x</button>
+              <button data-factor="1.5">1.5x</button>
+              <button data-factor="2">2x</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="graph-container" id="graph-container-facebook">
+          <div class="loading" id="loading-facebook"><div class="mark">Loading network</div></div>
+          <div class="empty-state" id="empty-state-facebook"><div class="mark"></div></div>
+
+          <div class="search-box" id="search-box-facebook">
+            <input type="text" id="search-input-facebook" placeholder="Find an actor…" autocomplete="off">
+            <div class="search-results" id="search-results-facebook"></div>
+          </div>
+
+          <div class="left-rail" id="left-rail-facebook">
+            <h3>Network summary</h3>
+            <div class="stat-row"><span>Nodes</span><span id="stat-nodes-facebook">-</span></div>
+            <div class="stat-row"><span>Edges</span><span id="stat-edges-facebook">-</span></div>
+            <div class="stat-row"><span>Communities</span><span id="stat-communities-facebook">-</span></div>
+            <div class="divider"></div>
+            <h3>Legend</h3>
+            <div class="legend" id="legend-facebook"></div>
+            <div class="fb-note" id="fb-note-facebook"></div>
+          </div>
+
+          <div class="info-panel" id="info-panel-facebook">
+            <button class="close-btn" data-close-info="facebook">×</button>
+            <div class="name" id="info-name-facebook"></div>
+            <div class="tag" id="info-tag-facebook"></div>
+            <div class="metric"><span>Degree centrality</span><span id="info-degree-facebook"></span></div>
+            <div class="metric"><span>Betweenness</span><span id="info-betweenness-facebook"></span></div>
+            <div class="metric"><span>Eigenvector</span><span id="info-eigenvector-facebook"></span></div>
           </div>
         </div>
       </div>
 
-      <div id="graph-container">
-        <div id="loading"><div class="mark">Loading network</div></div>
-        <div id="empty-state"><div class="mark"></div></div>
-
-        <div id="search-box">
-          <input type="text" id="search-input" placeholder="Find an actor…" autocomplete="off">
-          <div id="search-results"></div>
-        </div>
-
-        <div id="left-rail">
-          <h3>Network summary</h3>
-          <div class="stat-row"><span>Nodes</span><span id="stat-nodes">-</span></div>
-          <div class="stat-row"><span>Edges</span><span id="stat-edges">-</span></div>
-          <div class="stat-row"><span>Communities</span><span id="stat-communities">-</span></div>
-          <div class="divider"></div>
-          <h3>Legend</h3>
-          <div id="legend"></div>
-          <div id="fb-note"></div>
-        </div>
-
-        <div id="info-panel">
-          <button class="close-btn" id="info-close">×</button>
-          <div class="name" id="info-name"></div>
-          <div class="tag" id="info-tag"></div>
-          <div class="metric"><span>Degree centrality</span><span id="info-degree"></span></div>
-          <div class="metric"><span>Betweenness</span><span id="info-betweenness"></span></div>
-          <div class="metric"><span>Eigenvector</span><span id="info-eigenvector"></span></div>
+      <div class="topics-sub-page" id="facebook-topics-sub">
+        <div class="kicker">Facebook &mdash; Topic Modeling</div>
+        <h1>Topic Modeling Results</h1>
+        <p>This section embeds this project's own BERTopic run for Facebook once it's available (see <code>ARCHITECTURE_TOPIC_MODELING.md</code> for the embedding approach).</p>
+        <div class="topic-embed-wrap" id="topic-embed-facebook">
+          <div class="topic-embed-fallback">
+            Not embedded yet. Once <code>facebook_topics.html</code> is placed alongside this page and committed to the repo, it will render here automatically &mdash; no code changes needed.
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="page" id="page-topics">
-      <div class="kicker">Topic Modeling Results</div>
-      <h1>Topic Modeling Results</h1>
-      <div class="tbd-note">This section is in progress. The original study ran BERTopic on both platforms' post text, but this dashboard's own topic-modeling pass hasn't been run yet, so results aren't shown here to avoid mixing the two.</div>
+    <!-- ============================= TIKTOK RESULTS ============================= -->
+    <section class="page results-page" id="page-tiktok-results">
+      <div class="subnav" data-platform="tiktok">
+        <button data-sub="network" class="active">Network Analysis</button>
+        <button data-sub="topics">Topic Modeling <span class="tbd-flag">TBD</span></button>
+      </div>
+
+      <div class="sub-page active" id="tiktok-network-sub">
+        <div class="net-header">
+          <div>
+            <h2>TikTok &mdash; Network Analysis</h2>
+            <div class="sub">tiktok_nodes.json / tiktok_edges.json</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="expand-control visible" id="expand-control-tiktok">
+              <span>Expand:</span>
+              <button data-factor="1" class="active">1x</button>
+              <button data-factor="1.5">1.5x</button>
+              <button data-factor="2">2x</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="graph-container" id="graph-container-tiktok">
+          <div class="loading" id="loading-tiktok"><div class="mark">Loading network</div></div>
+          <div class="empty-state" id="empty-state-tiktok"><div class="mark"></div></div>
+
+          <div class="search-box" id="search-box-tiktok">
+            <input type="text" id="search-input-tiktok" placeholder="Find an actor…" autocomplete="off">
+            <div class="search-results" id="search-results-tiktok"></div>
+          </div>
+
+          <div class="left-rail" id="left-rail-tiktok">
+            <h3>Network summary</h3>
+            <div class="stat-row"><span>Nodes</span><span id="stat-nodes-tiktok">-</span></div>
+            <div class="stat-row"><span>Edges</span><span id="stat-edges-tiktok">-</span></div>
+            <div class="stat-row"><span>Communities</span><span id="stat-communities-tiktok">-</span></div>
+            <div class="divider"></div>
+            <h3>Legend</h3>
+            <div class="legend" id="legend-tiktok"></div>
+            <div class="fb-note" id="fb-note-tiktok"></div>
+          </div>
+
+          <div class="info-panel" id="info-panel-tiktok">
+            <button class="close-btn" data-close-info="tiktok">×</button>
+            <div class="name" id="info-name-tiktok"></div>
+            <div class="tag" id="info-tag-tiktok"></div>
+            <div class="metric"><span>Degree centrality</span><span id="info-degree-tiktok"></span></div>
+            <div class="metric"><span>Betweenness</span><span id="info-betweenness-tiktok"></span></div>
+            <div class="metric"><span>Eigenvector</span><span id="info-eigenvector-tiktok"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="topics-sub-page" id="tiktok-topics-sub">
+        <div class="kicker">TikTok &mdash; Topic Modeling</div>
+        <h1>Topic Modeling Results</h1>
+        <p>This section embeds this project's own BERTopic run for TikTok once it's available (see <code>ARCHITECTURE_TOPIC_MODELING.md</code> for the embedding approach).</p>
+        <div class="topic-embed-wrap" id="topic-embed-tiktok">
+          <div class="topic-embed-fallback">
+            Not embedded yet. Once <code>tiktok_topics.html</code> is placed alongside this page and committed to the repo, it will render here automatically &mdash; no code changes needed.
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="page" id="page-discussion">
@@ -284,32 +376,29 @@
 
 <script>
 /* -------------------------------------------------------------------------
-   HPV Network Dashboard: Network Analysis Results tab
+   HPV Network Dashboard
    Reads <prefix>_nodes.json / <prefix>_edges.json / <prefix>_meta.json produced
    by the Colab pipeline. No backend, no build step.
+
+   Facebook and TikTok each get their own page, their own graph container, and
+   their own Sigma renderer instance (see PLATFORM_STATE below). They no longer
+   share a single container/renderer pair — that sharing was the root cause of
+   the summary/search/legend intermittently not appearing: killing and
+   rebuilding one shared renderer on every toggle click raced against the
+   summary/legend/search DOM updates tied to it.
 ------------------------------------------------------------------------- */
 
 // ================= Site shell: side nav + mobile drawer =================
 const pageButtons = document.querySelectorAll("#sidenav button[data-page]");
 const pages = document.querySelectorAll(".page");
-let networkInitialized = false;
 
 function showPage(key){
   pages.forEach(p => p.classList.toggle("active", p.id === "page-" + key));
   pageButtons.forEach(b => b.classList.toggle("active", b.dataset.page === key));
   closeMobileNav();
 
-  // The graph is only built once its container is actually visible. Building a
-  // WebGL canvas inside a hidden (zero-size) element is what previously left the
-  // Network Analysis Results tab broken (blank graph, missing legend/search/details).
-  if(key === "network"){
-    if(!networkInitialized){
-      networkInitialized = true;
-      loadPlatform("facebook");
-    }else if(renderer){
-      renderer.refresh();
-    }
-  }
+  if(key === "facebook-results") maybeInitNetwork("facebook");
+  if(key === "tiktok-results") maybeInitNetwork("tiktok");
 }
 pageButtons.forEach(btn => btn.addEventListener("click", () => showPage(btn.dataset.page)));
 
@@ -325,21 +414,39 @@ function closeMobileNav(){
   navOverlay.classList.remove("visible");
 }
 
-// ================= Network Analysis Results =================
+// ================= Sub-nav: Network Analysis / Topic Modeling =================
+document.querySelectorAll(".subnav").forEach(nav => {
+  const platform = nav.dataset.platform;
+  nav.querySelectorAll("button[data-sub]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      nav.querySelectorAll("button[data-sub]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const sub = btn.dataset.sub;
+      document.getElementById(`${platform}-network-sub`).classList.toggle("active", sub === "network");
+      document.getElementById(`${platform}-topics-sub`).classList.toggle("active", sub === "topics");
+      if(sub === "network"){
+        maybeInitNetwork(platform);
+        // Container may have been hidden (zero-size) while Topic Modeling was
+        // showing; a visible-but-stale renderer needs a refresh, not a rebuild.
+        const st = PLATFORM_STATE[platform];
+        if(st.renderer) st.renderer.refresh();
+      }
+      if(sub === "topics") maybeLoadTopicEmbed(platform);
+    });
+  });
+});
+
+// ================= Network Analysis: config + per-platform state =================
 
 const PLATFORMS = {
-  facebook: { nodesFile: "facebook_nodes.json", edgesFile: "facebook_edges.json", metaFile: "facebook_meta.json", label: "Facebook", directedDefault: true },
-  tiktok:   { nodesFile: "tiktok_nodes.json",   edgesFile: "tiktok_edges.json",   metaFile: "tiktok_meta.json",   label: "TikTok",   directedDefault: false },
+  facebook: { nodesFile: "facebook_nodes.json", edgesFile: "facebook_edges.json", metaFile: "facebook_meta.json", topicsFile: "facebook_topics.html", label: "Facebook", directedDefault: true },
+  tiktok:   { nodesFile: "tiktok_nodes.json",   edgesFile: "tiktok_edges.json",   metaFile: "tiktok_meta.json",   topicsFile: "tiktok_topics.html",   label: "TikTok",   directedDefault: false },
 };
 
 // Okabe-Ito colorblind-safe qualitative palette, used as the fallback for any named
 // cluster not covered by PLATFORM_COLOR_OVERRIDES below.
 const COMMUNITY_PALETTE = ["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999"];
 
-// Curated, assignment-based colors for known clusters (sampled from the project's
-// reference brand colors), keyed by platform so each named cluster gets a fixed,
-// guaranteed-distinct color rather than relying on a hash, which can put two
-// visually similar colors on two different clusters purely by coincidence.
 const PLATFORM_COLOR_OVERRIDES = {
   tiktok: {
     "OB-GYN / Reproductive Health": "#C9A227",
@@ -353,22 +460,40 @@ const PLATFORM_COLOR_OVERRIDES = {
   },
 };
 
-let currentPlatformKey = "facebook";
-const platformCache = {};
+// Edge coloring. Previous version used rgba()-free hex but at low alpha (0x40/0x59,
+// ~25-35%), which read as near-invisible on white, especially for arrowheads —
+// Sigma's arrow program draws the arrowhead using this same edge color, so a faint
+// edge means a faint (functionally invisible) arrow. Bumped to a darker, more
+// saturated slate-blue at much higher opacity for real edges; self-loops stay
+// visually de-emphasized (they don't represent cross-account flow) but are still
+// clearly visible rather than near-white.
+const EDGE_COLOR_NORMAL = "#2b4a63d9";   // slate blue, ~85% opacity
+const EDGE_COLOR_SELFLOOP = "#8fa3ad80"; // muted gray, ~50% opacity
 
-let renderer = null;
-let currentGraph = null;
-let currentNodes = [];
-let currentMeta = {};
-let graphCentroid = { x: 0, y: 0 };
-let currentExpandFactor = 1;
+// One isolated state object per platform: its own graph, renderer, cached data,
+// centroid, and expand factor. Nothing here is shared across platforms, which is
+// what makes the two results pages independent instead of racing each other.
+function freshPlatformState(){
+  return {
+    renderer: null,
+    graph: null,
+    nodes: [],
+    meta: {},
+    globalCentroid: { x: 0, y: 0 },
+    communityCentroids: {},   // community_label -> {x, y} (base, pre-expansion)
+    expandFactor: 1,
+    initialized: false,
+    cache: null,              // { nodes, edges, meta } once fetched
+    topicsChecked: false,
+  };
+}
+const PLATFORM_STATE = { facebook: freshPlatformState(), tiktok: freshPlatformState() };
 
-const state = {};
+const $$ = (id) => document.getElementById(id);
+const byId = (base, platform) => document.getElementById(`${base}-${platform}`);
 
-const $ = (id) => document.getElementById(id);
-
-function labelColor(label){
-  const override = PLATFORM_COLOR_OVERRIDES[currentPlatformKey] && PLATFORM_COLOR_OVERRIDES[currentPlatformKey][label];
+function labelColor(platform, label){
+  const override = PLATFORM_COLOR_OVERRIDES[platform] && PLATFORM_COLOR_OVERRIDES[platform][label];
   if(override) return override;
   if(!label) return "#6b7c85";
   let hash = 0;
@@ -376,18 +501,14 @@ function labelColor(label){
   return COMMUNITY_PALETTE[Math.abs(hash) % COMMUNITY_PALETTE.length];
 }
 
-// Named clusters (matched to a paper fingerprint) get a distinct color each, so they
-// stand out. Uncategorized clusters all share a neutral gray, varied only in
-// lightness by community id, so they recede as a group instead of competing with
-// the named clusters visually. Lightness range tuned for a white background.
-function communityColor(label){
+function communityColor(platform, label){
   const match = /^Community (\d+) - Uncategorized$/.exec(label || "");
   if(match){
     const id = parseInt(match[1], 10);
-    const lightness = 55 + (id % 6) * 4; // 55% .. 75%: visible on white, still muted
+    const lightness = 55 + (id % 6) * 4;
     return `hsl(210, 6%, ${lightness}%)`;
   }
-  return labelColor(label);
+  return labelColor(platform, label);
 }
 
 function displayLabel(rawLabel, communityId){
@@ -397,28 +518,25 @@ function displayLabel(rawLabel, communityId){
   return rawLabel;
 }
 
-function cleanFacebookId(idString){
-  return String(idString).replace(/\.0$/, "");
+function maybeInitNetwork(platform){
+  const st = PLATFORM_STATE[platform];
+  if(!st.initialized){
+    st.initialized = true;
+    loadPlatform(platform);
+  }
 }
 
-async function loadPlatform(key){
-  currentPlatformKey = key;
-  const cfg = PLATFORMS[key];
-  $("loading").style.display = "flex";
-  $("empty-state").style.display = "none";
-  $("info-panel").classList.remove("visible");
-  $("platform-sub").textContent = `${cfg.nodesFile} / ${cfg.edgesFile}`;
+async function loadPlatform(platform){
+  const cfg = PLATFORMS[platform];
+  const st = PLATFORM_STATE[platform];
 
-  document.querySelectorAll("#platform-toggle button").forEach(b => b.classList.remove("active"));
-  $("btn-" + key).classList.add("active");
-
-  $("expand-control").classList.toggle("visible", key === "tiktok");
-  resetExpandButtons();
+  byId("loading", platform).style.display = "flex";
+  byId("empty-state", platform).style.display = "none";
+  byId("info-panel", platform).classList.remove("visible");
 
   let nodes, edges, meta;
-  const cached = platformCache[key];
-  if(cached){
-    ({ nodes, edges, meta } = cached);
+  if(st.cache){
+    ({ nodes, edges, meta } = st.cache);
   }else{
     try{
       const [nRes, eRes] = await Promise.all([fetch(cfg.nodesFile), fetch(cfg.edgesFile)]);
@@ -426,9 +544,9 @@ async function loadPlatform(key){
       nodes = await nRes.json();
       edges = await eRes.json();
     }catch(err){
-      $("loading").style.display = "none";
-      $("empty-state").style.display = "flex";
-      $("empty-state").querySelector(".mark").innerHTML =
+      byId("loading", platform).style.display = "none";
+      byId("empty-state", platform).style.display = "flex";
+      byId("empty-state", platform).querySelector(".mark").innerHTML =
         `Couldn't load <strong>${cfg.nodesFile}</strong> / <strong>${cfg.edgesFile}</strong>.<br><br>` +
         `Place both files from the Colab pipeline in the same folder as this page, then reload.`;
       return;
@@ -439,36 +557,44 @@ async function loadPlatform(key){
       meta = mRes.ok ? await mRes.json() : {};
     }catch(_){ meta = {}; }
 
-    platformCache[key] = { nodes, edges, meta };
+    st.cache = { nodes, edges, meta };
   }
 
-  currentMeta = meta;
-
-  buildGraph(nodes, edges, cfg, meta);
+  st.meta = meta;
+  buildGraph(platform, nodes, edges, cfg, meta);
 }
 
-function buildGraph(nodes, edges, cfg, meta){
+function buildGraph(platform, nodes, edges, cfg, meta){
+  const st = PLATFORM_STATE[platform];
   try{
-    if(renderer){ renderer.kill(); renderer = null; }
+    if(st.renderer){ st.renderer.kill(); st.renderer = null; }
 
     const directed = typeof meta.directed === "boolean" ? meta.directed : cfg.directedDefault;
     const graph = new graphology.Graph({ multi: true, type: "directed" });
-    currentNodes = nodes;
+    st.nodes = nodes;
 
     const degrees = nodes.map(n => n.degree_centrality || 0);
     const maxDeg = Math.max(...degrees, 0.0001);
 
     let sumX = 0, sumY = 0;
+    const communitySums = {}; // label -> {sx, sy, n}
+
     nodes.forEach(n => {
       const label = displayLabel(n.community_label, n.community);
       const size = 3 + (n.degree_centrality / maxDeg) * 14;
       sumX += n.x; sumY += n.y;
+
+      if(!communitySums[label]) communitySums[label] = { sx: 0, sy: 0, n: 0 };
+      communitySums[label].sx += n.x;
+      communitySums[label].sy += n.y;
+      communitySums[label].n += 1;
+
       graph.addNode(n.id, {
         x: n.x, y: n.y,
         baseX: n.x, baseY: n.y,
         size,
         label: n.label || n.id,
-        color: communityColor(label),
+        color: communityColor(platform, label),
         _degree: n.degree_centrality || 0,
         _betweenness: n.betweenness_centrality || 0,
         _eigenvector: n.eigenvector_centrality || 0,
@@ -476,8 +602,14 @@ function buildGraph(nodes, edges, cfg, meta){
         _isNumericId: !!n.is_numeric_id,
       });
     });
-    graphCentroid = { x: sumX / nodes.length, y: sumY / nodes.length };
-    currentExpandFactor = 1;
+
+    st.globalCentroid = { x: sumX / nodes.length, y: sumY / nodes.length };
+    st.communityCentroids = {};
+    Object.entries(communitySums).forEach(([label, s]) => {
+      st.communityCentroids[label] = { x: s.sx / s.n, y: s.sy / s.n };
+    });
+    st.expandFactor = 1;
+    resetExpandButtons(platform);
 
     edges.forEach((e, i) => {
       if(!graph.hasNode(e.source) || !graph.hasNode(e.target)) return;
@@ -485,106 +617,138 @@ function buildGraph(nodes, edges, cfg, meta){
         graph.addEdgeWithKey("e" + i, e.source, e.target, {
           type: directed ? "arrow" : "line",
           weight: e.weight || 1,
-          size: Math.min(0.3 + Math.log(1 + (e.weight||1)) * 0.4, 3),
-          color: e.is_selfloop ? "#5b748040" : "#5b748059",
+          size: Math.min(0.6 + Math.log(1 + (e.weight||1)) * 0.5, 3.5),
+          color: e.is_selfloop ? EDGE_COLOR_SELFLOOP : EDGE_COLOR_NORMAL,
         });
       }catch(_){ /* skip malformed edge */ }
     });
 
-    currentGraph = graph;
-    mountRenderer(graph);
+    st.graph = graph;
+    mountRenderer(platform, graph);
 
-    updateSummary(graph);
-    buildLegend(graph);
-    buildFacebookNote(cfg === PLATFORMS.facebook);
-    $("loading").style.display = "none";
+    updateSummary(platform, graph);
+    buildLegend(platform, graph);
+    buildFacebookNote(platform, cfg === PLATFORMS.facebook);
+    byId("loading", platform).style.display = "none";
   }catch(err){
     console.error("buildGraph failed:", err);
-    $("loading").style.display = "none";
-    $("empty-state").style.display = "flex";
-    $("empty-state").querySelector(".mark").innerHTML =
+    byId("loading", platform).style.display = "none";
+    byId("empty-state", platform).style.display = "flex";
+    byId("empty-state", platform).querySelector(".mark").innerHTML =
       `Something went wrong rendering this network. Check the browser console for details.<br><br>` +
       `<span style="font-family:var(--mono);font-size:10px;">${err.message || err}</span>`;
   }
 }
 
-// Builds (or rebuilds) the Sigma renderer against the current graph. Sigma computes
-// its coordinate normalization -- how graph-space positions map to camera/screen
-// space -- once, from node extents at construction time. Mutating x/y afterward
-// (as applyExpansion does) does not force that normalization to recompute, which is
-// why expansion previously looked broken: newly far-flung nodes were drawn using a
-// camera framing fit to the original, smaller layout. Rebuilding the renderer here
-// forces Sigma to reindex against the current extents.
-function mountRenderer(graph){
-  if(renderer){ renderer.kill(); renderer = null; }
-  const container = $("graph-container");
-  renderer = new Sigma(graph, container, {
+// Builds (or rebuilds) the Sigma renderer for one platform's container. Sigma
+// computes its coordinate normalization once, from node extents, at construction
+// time — mutating x/y afterward (as applyExpansion does) does not force that to
+// recompute, so the renderer is deliberately rebuilt after any position change.
+//
+// defaultEdgeColor is set explicitly (not left to rely on per-edge color alone) so
+// the arrow/edge program always has an unambiguous, high-contrast fallback instead
+// of silently drawing arrowheads in whatever built-in default Sigma otherwise uses.
+function mountRenderer(platform, graph){
+  const st = PLATFORM_STATE[platform];
+  if(st.renderer){ st.renderer.kill(); st.renderer = null; }
+  const container = byId("graph-container", platform);
+  st.renderer = new Sigma(graph, container, {
     minCameraRatio: 0.05,
     maxCameraRatio: 10,
     labelRenderedSizeThreshold: 8,
     defaultNodeColor: "#6b7c85",
+    defaultEdgeColor: EDGE_COLOR_NORMAL,
     labelColor: { color: "#1a2327" },
     renderEdgeLabels: false,
   });
-  renderer.on("clickNode", ({ node }) => showInfo(node));
-  renderer.on("clickStage", () => $("info-panel").classList.remove("visible"));
+  st.renderer.on("clickNode", ({ node }) => showInfo(platform, node));
+  st.renderer.on("clickStage", () => byId("info-panel", platform).classList.remove("visible"));
 }
 
-// Mirrors Gephi's "Expansion" tool: scales every node's position outward from the
-// graph's centroid by a fixed factor. Purely cosmetic: it does not touch layout,
-// communities, or centrality, and always recomputes from each node's original
-// (base) position so switching factors doesn't compound or drift.
-function applyExpansion(factor){
-  if(!currentGraph) return;
-  currentExpandFactor = factor;
-  currentGraph.forEachNode((node, attrs) => {
-    const newX = graphCentroid.x + (attrs.baseX - graphCentroid.x) * factor;
-    const newY = graphCentroid.y + (attrs.baseY - graphCentroid.y) * factor;
-    currentGraph.setNodeAttribute(node, "x", newX);
-    currentGraph.setNodeAttribute(node, "y", newY);
+// "Explode by group": two-level expansion rather than a single uniform scale from
+// one global centroid. A uniform scale-from-global-centroid (the previous
+// implementation) moves every node by the same factor relative to the same point,
+// which changes overall zoom but leaves every node exactly as close to its
+// neighbors as before — visually it looked like nothing had "expanded".
+//
+// Here, each community's own centroid is first pushed outward from the global
+// centroid (separating clusters from each other), and then each node is pushed
+// outward from *its own* community's centroid (spreading out nodes within a
+// cluster). Cluster separation is amplified relative to intra-cluster spread so
+// the two effects are visually distinguishable instead of collapsing back into a
+// single uniform scale. Always computed from baseX/baseY so repeated factor
+// changes never compound.
+function applyExpansion(platform, factor){
+  const st = PLATFORM_STATE[platform];
+  if(!st.graph) return;
+  st.expandFactor = factor;
+
+  const clusterFactor = 1 + (factor - 1) * 1.8; // push clusters apart more...
+  const nodeFactor = factor;                    // ...than nodes spread within a cluster
+
+  const gc = st.globalCentroid;
+
+  st.graph.forEachNode((node, attrs) => {
+    const label = attrs._communityLabel;
+    const cc = st.communityCentroids[label] || gc;
+
+    const ccNewX = gc.x + (cc.x - gc.x) * clusterFactor;
+    const ccNewY = gc.y + (cc.y - gc.y) * clusterFactor;
+
+    const newX = ccNewX + (attrs.baseX - cc.x) * nodeFactor;
+    const newY = ccNewY + (attrs.baseY - cc.y) * nodeFactor;
+
+    st.graph.setNodeAttribute(node, "x", newX);
+    st.graph.setNodeAttribute(node, "y", newY);
   });
-  mountRenderer(currentGraph);
+
+  mountRenderer(platform, st.graph);
 }
 
-function resetExpandButtons(){
-  document.querySelectorAll("#expand-control button").forEach(b => {
+function resetExpandButtons(platform){
+  const control = byId("expand-control", platform);
+  if(!control) return;
+  control.querySelectorAll("button").forEach(b => {
     b.classList.toggle("active", parseFloat(b.dataset.factor) === 1);
   });
 }
 
-document.querySelectorAll("#expand-control button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll("#expand-control button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    applyExpansion(parseFloat(btn.dataset.factor));
+document.querySelectorAll(".expand-control").forEach(control => {
+  const platform = control.id.replace("expand-control-", "");
+  control.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      control.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyExpansion(platform, parseFloat(btn.dataset.factor));
+    });
   });
 });
 
-function updateSummary(graph){
+function updateSummary(platform, graph){
   const labels = new Set(graph.mapNodes((n, attrs) => attrs._communityLabel));
-  $("stat-nodes").textContent = graph.order.toLocaleString();
-  $("stat-edges").textContent = graph.size.toLocaleString();
-  $("stat-communities").textContent = labels.size.toLocaleString();
+  byId("stat-nodes", platform).textContent = graph.order.toLocaleString();
+  byId("stat-edges", platform).textContent = graph.size.toLocaleString();
+  byId("stat-communities", platform).textContent = labels.size.toLocaleString();
 }
 
-function buildLegend(graph){
+function buildLegend(platform, graph){
   const counts = {};
   graph.forEachNode((n, attrs) => {
     counts[attrs._communityLabel] = (counts[attrs._communityLabel]||0) + 1;
   });
   const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const legend = $("legend");
+  const legend = byId("legend", platform);
   legend.innerHTML = "";
   top.forEach(([label, count]) => {
     const row = document.createElement("div");
     row.className = "legend-item";
-    row.innerHTML = `<span class="legend-dot" style="background:${communityColor(label)}"></span>${label} (${count})`;
+    row.innerHTML = `<span class="legend-dot" style="background:${communityColor(platform, label)}"></span>${label} (${count})`;
     legend.appendChild(row);
   });
 }
 
-function buildFacebookNote(isFacebook){
-  const note = $("fb-note");
+function buildFacebookNote(platform, isFacebook){
+  const note = byId("fb-note", platform);
   if(!isFacebook){ note.classList.remove("visible"); return; }
   note.innerHTML = `Some accounts show up as a number instead of a name. That number is the ` +
     `account's Facebook Page ID, used when a public username wasn't available at the time ` +
@@ -592,50 +756,85 @@ function buildFacebookNote(isFacebook){
   note.classList.add("visible");
 }
 
-function showInfo(nodeId){
-  const attrs = currentGraph.getNodeAttributes(nodeId);
-  $("info-name").textContent = attrs.label;
-  $("info-tag").textContent = attrs._communityLabel;
-  $("info-degree").textContent = attrs._degree.toFixed(4);
-  $("info-betweenness").textContent = attrs._betweenness.toFixed(4);
-  $("info-eigenvector").textContent = attrs._eigenvector.toFixed(4);
+function showInfo(platform, nodeId){
+  const st = PLATFORM_STATE[platform];
+  const attrs = st.graph.getNodeAttributes(nodeId);
+  byId("info-name", platform).textContent = attrs.label;
+  byId("info-tag", platform).textContent = attrs._communityLabel;
+  byId("info-degree", platform).textContent = attrs._degree.toFixed(4);
+  byId("info-betweenness", platform).textContent = attrs._betweenness.toFixed(4);
+  byId("info-eigenvector", platform).textContent = attrs._eigenvector.toFixed(4);
 
-  $("info-panel").classList.add("visible");
+  byId("info-panel", platform).classList.add("visible");
 
-  const pos = renderer.getNodeDisplayData(nodeId);
-  renderer.getCamera().animate({ x: pos.x, y: pos.y, ratio: Math.max(renderer.getCamera().ratio * 0.6, 0.08) }, { duration: 400 });
+  const pos = st.renderer.getNodeDisplayData(nodeId);
+  st.renderer.getCamera().animate(
+    { x: pos.x, y: pos.y, ratio: Math.max(st.renderer.getCamera().ratio * 0.6, 0.08) },
+    { duration: 400 }
+  );
 }
 
-$("info-close").addEventListener("click", () => $("info-panel").classList.remove("visible"));
-
-let searchDebounce;
-$("search-input").addEventListener("input", (e) => {
-  clearTimeout(searchDebounce);
-  const q = e.target.value.trim().toLowerCase();
-  const resultsBox = $("search-results");
-  if(!q){ resultsBox.style.display = "none"; return; }
-  searchDebounce = setTimeout(() => {
-    const matches = currentNodes
-      .filter(n => (n.label||n.id).toLowerCase().includes(q))
-      .slice(0, 12);
-    resultsBox.innerHTML = "";
-    if(matches.length === 0){ resultsBox.style.display = "none"; return; }
-    matches.forEach(n => {
-      const div = document.createElement("div");
-      div.textContent = n.label || n.id;
-      div.addEventListener("click", () => {
-        showInfo(n.id);
-        resultsBox.style.display = "none";
-        $("search-input").value = n.label || n.id;
-      });
-      resultsBox.appendChild(div);
-    });
-    resultsBox.style.display = "block";
-  }, 150);
+document.querySelectorAll("[data-close-info]").forEach(btn => {
+  btn.addEventListener("click", () => byId("info-panel", btn.dataset.closeInfo).classList.remove("visible"));
 });
 
-$("btn-facebook").addEventListener("click", () => loadPlatform("facebook"));
-$("btn-tiktok").addEventListener("click", () => loadPlatform("tiktok"));
+["facebook", "tiktok"].forEach(platform => {
+  let searchDebounce;
+  const input = byId("search-input", platform);
+  input.addEventListener("input", (e) => {
+    clearTimeout(searchDebounce);
+    const q = e.target.value.trim().toLowerCase();
+    const resultsBox = byId("search-results", platform);
+    if(!q){ resultsBox.style.display = "none"; return; }
+    searchDebounce = setTimeout(() => {
+      const st = PLATFORM_STATE[platform];
+      const matches = st.nodes
+        .filter(n => (n.label||n.id).toLowerCase().includes(q))
+        .slice(0, 12);
+      resultsBox.innerHTML = "";
+      if(matches.length === 0){ resultsBox.style.display = "none"; return; }
+      matches.forEach(n => {
+        const div = document.createElement("div");
+        div.textContent = n.label || n.id;
+        div.addEventListener("click", () => {
+          showInfo(platform, n.id);
+          resultsBox.style.display = "none";
+          input.value = n.label || n.id;
+        });
+        resultsBox.appendChild(div);
+      });
+      resultsBox.style.display = "block";
+    }, 150);
+  });
+});
+
+// ================= Topic Modeling embed (iframe, checked lazily) =================
+// See ARCHITECTURE_TOPIC_MODELING.md for the full design. In short: each platform's
+// Topic Modeling sub-page tries to embed "<platform>_topics.html" (a standalone
+// BERTopic HTML export) in an iframe the first time that sub-tab is opened. If the
+// file isn't present yet (404 / fetch failure), the pre-existing "not embedded yet"
+// placeholder stays in place — nothing breaks, no console-visible dashboard error.
+async function maybeLoadTopicEmbed(platform){
+  const st = PLATFORM_STATE[platform];
+  if(st.topicsChecked) return;
+  st.topicsChecked = true;
+
+  const cfg = PLATFORMS[platform];
+  const wrap = byId("topic-embed", platform);
+
+  try{
+    const res = await fetch(cfg.topicsFile, { method: "HEAD" });
+    if(!res.ok) return; // leave fallback message in place
+    wrap.innerHTML = "";
+    const iframe = document.createElement("iframe");
+    iframe.src = cfg.topicsFile;
+    iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
+    iframe.loading = "lazy";
+    wrap.appendChild(iframe);
+  }catch(_){
+    // No file yet / fetch blocked (e.g. local file:// testing) — fallback message stays.
+  }
+}
 </script>
 </body>
 </html>
