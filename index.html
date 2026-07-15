@@ -204,6 +204,20 @@ function labelColor(label){
   return COMMUNITY_PALETTE[Math.abs(hash) % COMMUNITY_PALETTE.length];
 }
 
+// Named clusters (matched to a paper fingerprint) get a distinct color each, so they
+// stand out. Uncategorized clusters all share the same low-key hue and saturation --
+// varied only in lightness, by community id -- so as a group they visually recede
+// behind the named clusters instead of competing with them for attention.
+function communityColor(label){
+  const match = /^Community (\d+) - Uncategorized$/.exec(label || "");
+  if(match){
+    const id = parseInt(match[1], 10);
+    const lightness = 22 + (id % 6) * 4; // 22% .. 42%, distinguishable but all muted
+    return `hsl(206, 12%, ${lightness}%)`;
+  }
+  return labelColor(label);
+}
+
 async function loadPlatform(key){
   const cfg = PLATFORMS[key];
   $("loading").style.display = "flex";
@@ -256,7 +270,7 @@ function buildGraph(nodes, edges, cfg, meta){
       x: n.x, y: n.y,
       size,
       label: n.label || n.id,
-      color: labelColor(label),
+      color: communityColor(label),
       _degree: n.degree_centrality || 0,
       _betweenness: n.betweenness_centrality || 0,
       _eigenvector: n.eigenvector_centrality || 0,
@@ -315,7 +329,7 @@ function buildLegend(graph){
   top.forEach(([label, count]) => {
     const row = document.createElement("div");
     row.className = "legend-item";
-    row.innerHTML = `<span class="legend-dot" style="background:${labelColor(label)}"></span>${label} (${count})`;
+    row.innerHTML = `<span class="legend-dot" style="background:${communityColor(label)}"></span>${label} (${count})`;
     legend.appendChild(row);
   });
 }
