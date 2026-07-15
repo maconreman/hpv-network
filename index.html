@@ -52,6 +52,8 @@
   .page .kicker{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;}
   .page p{line-height:1.7;color:var(--ink);font-size:14.5px;}
   .page p + p{margin-top:12px;}
+  .page ol{margin:8px 0 16px 0;padding-left:22px;}
+  .page ol li{line-height:1.7;color:var(--ink);font-size:14.5px;margin-bottom:6px;}
   .tbd-note{
     margin-top:16px;padding:14px 16px;background:var(--panel);border:1px solid var(--panel-line);
     border-radius:8px;font-size:13px;color:var(--muted);
@@ -178,11 +180,11 @@
 
   <main id="main">
 
-    <section class="page" id="page-title">
+    <section class="page active" id="page-title">
       <div class="kicker">Title</div>
       <h1>Networks of Influence</h1>
       <p>Exploring Online Human Papillomavirus (HPV) Vaccine Discussions through Network Analysis and Topic Modeling.</p>
-      <p>This site presents an interactive rebuild of the network analysis originally conducted in Gephi, alongside the study's background, research problem, and methods. Only the Network Analysis Results section is live right now &mdash; the remaining sections are marked TBD until that work is complete.</p>
+      <p>This site presents an interactive rebuild of the network analysis originally conducted in Gephi, alongside the study's background, research problem, and methods. Only the Network Analysis Results section is live right now. The remaining sections are marked TBD until that work is complete.</p>
     </section>
 
     <section class="page" id="page-background">
@@ -191,16 +193,18 @@
       <p>HPV is a sexually transmitted infection, and persistent infection can lead to cervical cancer. Cervical cancer rates are highest in low- and middle-income countries, largely because of limited vaccine access, weak screening infrastructure, and social and economic barriers.</p>
       <p>In the Philippines, the Department of Health added HPV vaccination to the national immunization program in 2015. Even so, by 2023 only about 11.67% of females had completed the full vaccine series. To close that gap, DOH partnered with the Department of Education on a school-based program vaccinating female students aged 9&ndash;10 in public schools.</p>
       <p>Access alone doesn't guarantee uptake. Vaccine hesitancy is shaped by four overlapping factors: historical, political, and socio-cultural context; public health and vaccine policy; recommendations from health professionals; and communication and media. In the Philippines specifically, the Dengvaxia controversy left a lasting mark on how Filipinos view vaccines generally.</p>
-      <p>Social media adds another layer. It gives far more people a platform to discuss vaccines, but with little built-in ability to separate accurate information from misinformation &mdash; which is what motivates looking closely at how HPV is actually being discussed on Facebook and TikTok.</p>
+      <p>Social media adds another layer. It gives far more people a platform to discuss vaccines, but with little built-in ability to separate accurate information from misinformation. That gap is what motivates looking closely at how HPV is actually being discussed on Facebook and TikTok.</p>
     </section>
 
     <section class="page" id="page-problem">
       <div class="kicker">Research Problem</div>
       <h1>Research Problem</h1>
       <p>This study looks at HPV-related discourse on Facebook and TikTok, with three goals:</p>
-      <p>1. Identify the key accounts and actors driving HPV-related conversation on each platform.<br>
-      2. Understand what public health knowledge (and gaps) show up in that conversation.<br>
-      3. Recommend health communication strategies that respond to what's actually being said.</p>
+      <ol>
+        <li>Identify the key accounts and actors driving HPV-related conversation on each platform.</li>
+        <li>Understand what public health knowledge, and gaps, show up in that conversation.</li>
+        <li>Recommend health communication strategies that respond to what's actually being said.</li>
+      </ol>
       <p>The underlying aim is practical: knowing who the influential voices are, and which platforms carry the most relevant discussion, helps identify who to engage, where misinformation needs to be countered, and how to design messaging that actually reaches people where they already are.</p>
     </section>
 
@@ -211,7 +215,7 @@
       <p><strong>Preprocessing.</strong> Duplicate and near-duplicate posts were removed, along with content that wasn't actually about HPV, to keep the dataset focused on vaccine safety, efficacy, campaigns, and personal experience content.</p>
       <p><strong>Network construction.</strong> Each platform's network was built differently, matching how the platform actually works: on Facebook, an edge runs from the account that shared a piece of content to the account that received it. On TikTok, an edge connects two accounts that used the same HPV-related hashtag. Community detection used the Louvain algorithm.</p>
       <p><strong>This dashboard's pipeline.</strong> The interactive view in Network Analysis Results doesn't reuse the original Gephi output directly. It reprocesses the same raw interaction data in Python (aggregation, layout, Louvain communities, centrality) so the pipeline can be rerun as the dataset grows, rather than depending on a one-time Gephi export.</p>
-      <p><strong>Topic modeling.</strong> The original study used BERTopic (with class-based TF-IDF term weighting) in multilingual mode, since posts appear in both English and Filipino. This dashboard's own topic modeling pass has not been run yet &mdash; see Topic Modeling Results.</p>
+      <p><strong>Topic modeling.</strong> The original study used BERTopic (with class-based TF-IDF term weighting) in multilingual mode, since posts appear in both English and Filipino. This dashboard's own topic modeling pass has not been run yet. See Topic Modeling Results.</p>
     </section>
 
     <section class="page" id="page-network">
@@ -235,7 +239,7 @@
       </div>
 
       <div id="graph-container">
-        <div id="loading"><div class="mark">Loading network...</div></div>
+        <div id="loading"><div class="mark">Loading network</div></div>
         <div id="empty-state"><div class="mark"></div></div>
 
         <div id="search-box">
@@ -282,7 +286,7 @@
 
 <script>
 /* -------------------------------------------------------------------------
-   HPV Network Dashboard — Network Analysis Results tab
+   HPV Network Dashboard: Network Analysis Results tab
    Reads <prefix>_nodes.json / <prefix>_edges.json / <prefix>_meta.json produced
    by the Colab pipeline. No backend, no build step.
 ------------------------------------------------------------------------- */
@@ -290,11 +294,24 @@
 // ================= Site shell: side nav + mobile drawer =================
 const pageButtons = document.querySelectorAll("#sidenav button[data-page]");
 const pages = document.querySelectorAll(".page");
+let networkInitialized = false;
 
 function showPage(key){
   pages.forEach(p => p.classList.toggle("active", p.id === "page-" + key));
   pageButtons.forEach(b => b.classList.toggle("active", b.dataset.page === key));
   closeMobileNav();
+
+  // The graph is only built once its container is actually visible. Building a
+  // WebGL canvas inside a hidden (zero-size) element is what previously left the
+  // Network Analysis Results tab broken (blank graph, missing legend/search/details).
+  if(key === "network"){
+    if(!networkInitialized){
+      networkInitialized = true;
+      loadPlatform("facebook");
+    }else if(renderer){
+      renderer.refresh();
+    }
+  }
 }
 pageButtons.forEach(btn => btn.addEventListener("click", () => showPage(btn.dataset.page)));
 
@@ -339,8 +356,8 @@ function labelColor(label){
 }
 
 // Named clusters (matched to a paper fingerprint) get a distinct color each, so they
-// stand out. Uncategorized clusters all share a neutral gray -- varied only in
-// lightness, by community id -- so they recede as a group instead of competing with
+// stand out. Uncategorized clusters all share a neutral gray, varied only in
+// lightness by community id, so they recede as a group instead of competing with
 // the named clusters visually. Lightness range tuned for a white background.
 function communityColor(label){
   const match = /^Community (\d+) - Uncategorized$/.exec(label || "");
@@ -465,7 +482,7 @@ function buildGraph(nodes, edges, cfg, meta){
 }
 
 // Mirrors Gephi's "Expansion" tool: scales every node's position outward from the
-// graph's centroid by a fixed factor. Purely cosmetic -- it does not touch layout,
+// graph's centroid by a fixed factor. Purely cosmetic: it does not touch layout,
 // communities, or centrality, and always recomputes from each node's original
 // (base) position so switching factors doesn't compound or drift.
 function applyExpansion(factor){
@@ -570,8 +587,6 @@ $("search-input").addEventListener("input", (e) => {
 
 $("btn-facebook").addEventListener("click", () => loadPlatform("facebook"));
 $("btn-tiktok").addEventListener("click", () => loadPlatform("tiktok"));
-
-loadPlatform("facebook");
 </script>
 </body>
 </html>
