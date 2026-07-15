@@ -184,7 +184,6 @@
       <div class="kicker">Title</div>
       <h1>Networks of Influence</h1>
       <p>Exploring Online Human Papillomavirus (HPV) Vaccine Discussions through Network Analysis and Topic Modeling.</p>
-      <p>This site presents an interactive rebuild of the network analysis originally conducted in Gephi, alongside the study's background, research problem, and methods. Only the Network Analysis Results section is live right now. The remaining sections are marked TBD until that work is complete.</p>
     </section>
 
     <section class="page" id="page-background">
@@ -199,13 +198,13 @@
     <section class="page" id="page-problem">
       <div class="kicker">Research Problem</div>
       <h1>Research Problem</h1>
-      <p>This study looks at HPV-related discourse on Facebook and TikTok, with three goals:</p>
+      <p>This study looks at HPV-related discourse on Facebook and TikTok, specifically:</p>
       <ol>
-        <li>Identify the key accounts and actors driving HPV-related conversation on each platform.</li>
-        <li>Understand what public health knowledge, and gaps, show up in that conversation.</li>
-        <li>Recommend health communication strategies that respond to what's actually being said.</li>
+        <li>To identify the key accounts and actors driving HPV-related conversation on each platform.</li>
+        <li>To understand what public health knowledge and gaps show up in that conversation.</li>
+        <li>To recommend health communication strategies that respond to what's actually being said.</li>
       </ol>
-      <p>The underlying aim is practical: knowing who the influential voices are, and which platforms carry the most relevant discussion, helps identify who to engage, where misinformation needs to be countered, and how to design messaging that actually reaches people where they already are.</p>
+      <p>The main goal is to know who the influential voices are and which platforms carry the most relevant discussion, which helps identify who to engage, where misinformation needs to be countered, and how to design messaging that actually reaches people where they already are.</p>
     </section>
 
     <section class="page" id="page-methods">
@@ -214,7 +213,6 @@
       <p><strong>Data collection.</strong> Facebook and TikTok posts mentioning HPV were collected from January 2020 through July 2024, using over 15 search keywords (e.g. "hpv," "hpv vaccine," "cervical cancer vaccine," "gardasil," "pap smear"). Facebook data came from CrowdTangle; TikTok data came from Apify, with a supplemental TikTok pull in February 2025 to address a low initial post count.</p>
       <p><strong>Preprocessing.</strong> Duplicate and near-duplicate posts were removed, along with content that wasn't actually about HPV, to keep the dataset focused on vaccine safety, efficacy, campaigns, and personal experience content.</p>
       <p><strong>Network construction.</strong> Each platform's network was built differently, matching how the platform actually works: on Facebook, an edge runs from the account that shared a piece of content to the account that received it. On TikTok, an edge connects two accounts that used the same HPV-related hashtag. Community detection used the Louvain algorithm.</p>
-      <p><strong>This dashboard's pipeline.</strong> The interactive view in Network Analysis Results doesn't reuse the original Gephi output directly. It reprocesses the same raw interaction data in Python (aggregation, layout, Louvain communities, centrality) so the pipeline can be rerun as the dataset grows, rather than depending on a one-time Gephi export.</p>
       <p><strong>Topic modeling.</strong> The original study used BERTopic (with class-based TF-IDF term weighting) in multilingual mode, since posts appear in both English and Filipino. This dashboard's own topic modeling pass has not been run yet. See Topic Modeling Results.</p>
     </section>
 
@@ -334,8 +332,29 @@ const PLATFORMS = {
   tiktok:   { nodesFile: "tiktok_nodes.json",   edgesFile: "tiktok_edges.json",   metaFile: "tiktok_meta.json",   label: "TikTok",   directedDefault: false },
 };
 
-// Okabe-Ito colorblind-safe qualitative palette, used for named clusters.
+// Okabe-Ito colorblind-safe qualitative palette, used as the fallback for any named
+// cluster not covered by PLATFORM_COLOR_OVERRIDES below.
 const COMMUNITY_PALETTE = ["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999"];
+
+// Curated, assignment-based colors for known clusters (sampled from the project's
+// reference brand colors), keyed by platform so each named cluster gets a fixed,
+// guaranteed-distinct color rather than relying on a hash, which can put two
+// visually similar colors on two different clusters purely by coincidence.
+const PLATFORM_COLOR_OVERRIDES = {
+  tiktok: {
+    "OB-GYN / Reproductive Health": "#C9A227",
+    "Dermatology / Skincare": "#D46FB5",
+    "Beauty & Lifestyle": "#1A2327",
+  },
+  facebook: {
+    "Health & Government Orgs": "#0072B2",
+    "Commercial / Retail": "#D55E00",
+    "Vaccine Advocacy": "#009E73",
+  },
+};
+
+let currentPlatformKey = "facebook";
+const platformCache = {};
 
 let renderer = null;
 let currentGraph = null;
@@ -349,6 +368,8 @@ const state = {};
 const $ = (id) => document.getElementById(id);
 
 function labelColor(label){
+  const override = PLATFORM_COLOR_OVERRIDES[currentPlatformKey] && PLATFORM_COLOR_OVERRIDES[currentPlatformKey][label];
+  if(override) return override;
   if(!label) return "#6b7c85";
   let hash = 0;
   for(let i=0;i<label.length;i++){ hash = (hash * 31 + label.charCodeAt(i)) | 0; }
@@ -381,6 +402,7 @@ function cleanFacebookId(idString){
 }
 
 async function loadPlatform(key){
+  currentPlatformKey = key;
   const cfg = PLATFORMS[key];
   $("loading").style.display = "flex";
   $("empty-state").style.display = "none";
@@ -394,74 +416,107 @@ async function loadPlatform(key){
   resetExpandButtons();
 
   let nodes, edges, meta;
-  try{
-    const [nRes, eRes] = await Promise.all([fetch(cfg.nodesFile), fetch(cfg.edgesFile)]);
-    if(!nRes.ok || !eRes.ok) throw new Error("fetch failed");
-    nodes = await nRes.json();
-    edges = await eRes.json();
-  }catch(err){
-    $("loading").style.display = "none";
-    $("empty-state").style.display = "flex";
-    $("empty-state").querySelector(".mark").innerHTML =
-      `Couldn't load <strong>${cfg.nodesFile}</strong> / <strong>${cfg.edgesFile}</strong>.<br><br>` +
-      `Place both files from the Colab pipeline in the same folder as this page, then reload.`;
-    return;
+  const cached = platformCache[key];
+  if(cached){
+    ({ nodes, edges, meta } = cached);
+  }else{
+    try{
+      const [nRes, eRes] = await Promise.all([fetch(cfg.nodesFile), fetch(cfg.edgesFile)]);
+      if(!nRes.ok || !eRes.ok) throw new Error("fetch failed");
+      nodes = await nRes.json();
+      edges = await eRes.json();
+    }catch(err){
+      $("loading").style.display = "none";
+      $("empty-state").style.display = "flex";
+      $("empty-state").querySelector(".mark").innerHTML =
+        `Couldn't load <strong>${cfg.nodesFile}</strong> / <strong>${cfg.edgesFile}</strong>.<br><br>` +
+        `Place both files from the Colab pipeline in the same folder as this page, then reload.`;
+      return;
+    }
+
+    try{
+      const mRes = await fetch(cfg.metaFile);
+      meta = mRes.ok ? await mRes.json() : {};
+    }catch(_){ meta = {}; }
+
+    platformCache[key] = { nodes, edges, meta };
   }
 
-  try{
-    const mRes = await fetch(cfg.metaFile);
-    meta = mRes.ok ? await mRes.json() : {};
-  }catch(_){ meta = {}; }
   currentMeta = meta;
 
   buildGraph(nodes, edges, cfg, meta);
 }
 
 function buildGraph(nodes, edges, cfg, meta){
-  if(renderer){ renderer.kill(); renderer = null; }
+  try{
+    if(renderer){ renderer.kill(); renderer = null; }
 
-  const directed = typeof meta.directed === "boolean" ? meta.directed : cfg.directedDefault;
-  const graph = new graphology.Graph({ multi: true, type: "directed" });
-  currentNodes = nodes;
+    const directed = typeof meta.directed === "boolean" ? meta.directed : cfg.directedDefault;
+    const graph = new graphology.Graph({ multi: true, type: "directed" });
+    currentNodes = nodes;
 
-  const degrees = nodes.map(n => n.degree_centrality || 0);
-  const maxDeg = Math.max(...degrees, 0.0001);
+    const degrees = nodes.map(n => n.degree_centrality || 0);
+    const maxDeg = Math.max(...degrees, 0.0001);
 
-  let sumX = 0, sumY = 0;
-  nodes.forEach(n => {
-    const label = displayLabel(n.community_label, n.community);
-    const size = 3 + (n.degree_centrality / maxDeg) * 14;
-    sumX += n.x; sumY += n.y;
-    graph.addNode(n.id, {
-      x: n.x, y: n.y,
-      baseX: n.x, baseY: n.y,
-      size,
-      label: n.label || n.id,
-      color: communityColor(label),
-      _degree: n.degree_centrality || 0,
-      _betweenness: n.betweenness_centrality || 0,
-      _eigenvector: n.eigenvector_centrality || 0,
-      _communityLabel: label,
-      _isNumericId: !!n.is_numeric_id,
-    });
-  });
-  graphCentroid = { x: sumX / nodes.length, y: sumY / nodes.length };
-  currentExpandFactor = 1;
-
-  edges.forEach((e, i) => {
-    if(!graph.hasNode(e.source) || !graph.hasNode(e.target)) return;
-    try{
-      graph.addEdgeWithKey("e" + i, e.source, e.target, {
-        type: directed ? "arrow" : "line",
-        weight: e.weight || 1,
-        size: Math.min(0.3 + Math.log(1 + (e.weight||1)) * 0.4, 3),
-        color: e.is_selfloop ? "rgba(91,116,128,0.25)" : "rgba(91,116,128,0.35)",
+    let sumX = 0, sumY = 0;
+    nodes.forEach(n => {
+      const label = displayLabel(n.community_label, n.community);
+      const size = 3 + (n.degree_centrality / maxDeg) * 14;
+      sumX += n.x; sumY += n.y;
+      graph.addNode(n.id, {
+        x: n.x, y: n.y,
+        baseX: n.x, baseY: n.y,
+        size,
+        label: n.label || n.id,
+        color: communityColor(label),
+        _degree: n.degree_centrality || 0,
+        _betweenness: n.betweenness_centrality || 0,
+        _eigenvector: n.eigenvector_centrality || 0,
+        _communityLabel: label,
+        _isNumericId: !!n.is_numeric_id,
       });
-    }catch(_){ /* skip malformed edge */ }
-  });
+    });
+    graphCentroid = { x: sumX / nodes.length, y: sumY / nodes.length };
+    currentExpandFactor = 1;
 
-  currentGraph = graph;
+    edges.forEach((e, i) => {
+      if(!graph.hasNode(e.source) || !graph.hasNode(e.target)) return;
+      try{
+        graph.addEdgeWithKey("e" + i, e.source, e.target, {
+          type: directed ? "arrow" : "line",
+          weight: e.weight || 1,
+          size: Math.min(0.3 + Math.log(1 + (e.weight||1)) * 0.4, 3),
+          color: e.is_selfloop ? "#5b748040" : "#5b748059",
+        });
+      }catch(_){ /* skip malformed edge */ }
+    });
 
+    currentGraph = graph;
+    mountRenderer(graph);
+
+    updateSummary(graph);
+    buildLegend(graph);
+    buildFacebookNote(cfg === PLATFORMS.facebook);
+    $("loading").style.display = "none";
+  }catch(err){
+    console.error("buildGraph failed:", err);
+    $("loading").style.display = "none";
+    $("empty-state").style.display = "flex";
+    $("empty-state").querySelector(".mark").innerHTML =
+      `Something went wrong rendering this network. Check the browser console for details.<br><br>` +
+      `<span style="font-family:var(--mono);font-size:10px;">${err.message || err}</span>`;
+  }
+}
+
+// Builds (or rebuilds) the Sigma renderer against the current graph. Sigma computes
+// its coordinate normalization -- how graph-space positions map to camera/screen
+// space -- once, from node extents at construction time. Mutating x/y afterward
+// (as applyExpansion does) does not force that normalization to recompute, which is
+// why expansion previously looked broken: newly far-flung nodes were drawn using a
+// camera framing fit to the original, smaller layout. Rebuilding the renderer here
+// forces Sigma to reindex against the current extents.
+function mountRenderer(graph){
+  if(renderer){ renderer.kill(); renderer = null; }
   const container = $("graph-container");
   renderer = new Sigma(graph, container, {
     minCameraRatio: 0.05,
@@ -471,14 +526,8 @@ function buildGraph(nodes, edges, cfg, meta){
     labelColor: { color: "#1a2327" },
     renderEdgeLabels: false,
   });
-
   renderer.on("clickNode", ({ node }) => showInfo(node));
   renderer.on("clickStage", () => $("info-panel").classList.remove("visible"));
-
-  updateSummary(graph);
-  buildLegend(graph);
-  buildFacebookNote(cfg === PLATFORMS.facebook);
-  $("loading").style.display = "none";
 }
 
 // Mirrors Gephi's "Expansion" tool: scales every node's position outward from the
@@ -494,7 +543,7 @@ function applyExpansion(factor){
     currentGraph.setNodeAttribute(node, "x", newX);
     currentGraph.setNodeAttribute(node, "y", newY);
   });
-  if(renderer) renderer.refresh();
+  mountRenderer(currentGraph);
 }
 
 function resetExpandButtons(){
