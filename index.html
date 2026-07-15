@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HPV Discourse Network — Facebook &amp; TikTok</title>
+<title>HPV Discourse Network: Facebook and TikTok</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/graphology/0.25.4/graphology.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.min.js"></script>
 <style>
@@ -59,29 +59,15 @@
   #legend{display:flex;flex-direction:column;gap:6px;margin-top:2px;}
   .legend-item{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted);}
   .legend-dot{width:9px;height:9px;border-radius:50%;flex:none;}
-  .legend-dot.solo{border:1.5px dashed var(--muted);background:transparent;}
 
   #fb-note{
-    margin-top:8px;padding:10px;background:rgba(255,138,92,0.1);border:1px solid rgba(255,138,92,0.3);
-    border-radius:8px;font-size:11px;line-height:1.5;color:var(--paper);display:none;
+    margin-top:8px;padding:10px;background:var(--ink);border:1px solid var(--panel-line);
+    border-radius:6px;font-size:11px;line-height:1.5;color:var(--muted);display:none;
   }
   #fb-note.visible{display:block;}
-  #fb-note code{font-family:var(--mono);font-size:10px;color:var(--accent);}
+  #fb-note code{font-family:var(--mono);font-size:10px;color:var(--paper);}
 
-  #view-controls{
-    position:absolute;right:20px;top:70px;z-index:10;width:250px;
-    background:var(--panel);border:1px solid var(--panel-line);border-radius:10px;padding:14px;
-  }
-  #view-controls h2{margin:0 0 10px 0;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;}
-  .control-row{margin-bottom:10px;}
-  .control-row label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
-  .control-row .value{color:var(--accent);}
-  #edge-mode-toggle{display:flex;gap:2px;background:var(--ink);border:1px solid var(--panel-line);border-radius:6px;padding:2px;}
-  #edge-mode-toggle button{flex:1;font-family:var(--mono);font-size:10px;background:transparent;border:none;color:var(--muted);padding:6px 4px;border-radius:4px;cursor:pointer;}
-  #edge-mode-toggle button.active{background:var(--accent);color:#1a0e08;font-weight:600;}
-  input[type="range"]{width:100%;accent-color:var(--accent);}
-
-  #search-box{position:absolute;right:20px;top:290px;z-index:10;width:250px;}
+  #search-box{position:absolute;right:20px;top:70px;z-index:10;width:250px;}
   #search-box input{
     width:100%;background:var(--panel);border:1px solid var(--panel-line);
     border-radius:8px;padding:10px 12px;color:var(--paper);font-family:var(--mono);
@@ -129,7 +115,7 @@
 <div id="app">
   <div id="graph-container"></div>
 
-  <div id="loading"><div class="mark">Loading network —</div></div>
+  <div id="loading"><div class="mark">Loading network...</div></div>
   <div id="empty-state"><div class="mark"></div></div>
 
   <header>
@@ -143,21 +129,6 @@
     </div>
   </header>
 
-  <div id="view-controls">
-    <h2>View</h2>
-    <div class="control-row">
-      <label>Show edges</label>
-      <div id="edge-mode-toggle">
-        <button id="mode-all" class="active">All</button>
-        <button id="mode-ego">On hover</button>
-      </div>
-    </div>
-    <div class="control-row">
-      <label>Min edge weight: <span class="value" id="weight-value">1</span></label>
-      <input type="range" id="weight-slider" min="1" max="10" step="1" value="1">
-    </div>
-  </div>
-
   <div id="search-box">
     <input type="text" id="search-input" placeholder="Find an actor…" autocomplete="off">
     <div id="search-results"></div>
@@ -165,11 +136,9 @@
 
   <div id="left-rail">
     <h2>Network summary</h2>
-    <div class="stat-row"><span>Nodes</span><span id="stat-nodes">—</span></div>
-    <div class="stat-row"><span>Edges</span><span id="stat-edges">—</span></div>
-    <div class="stat-row"><span>Direction</span><span id="stat-direction">—</span></div>
-    <div class="stat-row"><span>Communities</span><span id="stat-communities">—</span></div>
-    <div class="stat-row"><span>Solo actors</span><span id="stat-solo">—</span></div>
+    <div class="stat-row"><span>Nodes</span><span id="stat-nodes">-</span></div>
+    <div class="stat-row"><span>Edges</span><span id="stat-edges">-</span></div>
+    <div class="stat-row"><span>Communities</span><span id="stat-communities">-</span></div>
     <div class="divider"></div>
     <h2>Legend</h2>
     <div id="legend"></div>
@@ -183,7 +152,7 @@
     <div class="metric"><span>Degree centrality</span><span id="info-degree"></span></div>
     <div class="metric"><span>Betweenness</span><span id="info-betweenness"></span></div>
     <div class="metric"><span>Eigenvector</span><span id="info-eigenvector"></span></div>
-    <a class="fb-link" id="info-fb-link" style="display:none" target="_blank" rel="noopener">View Facebook page →</a>
+    <a class="fb-link" id="info-fb-link" style="display:none" target="_blank" rel="noopener">Open Facebook page</a>
   </div>
 </div>
 
@@ -201,22 +170,35 @@ const PLATFORMS = {
 
 // Okabe–Ito colorblind-safe qualitative palette (deuteranopia/protanopia/tritanopia safe).
 const COMMUNITY_PALETTE = ["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999"];
-const SOLO_COLOR = "#3a5560";
 
 let renderer = null;
 let currentGraph = null;
 let currentNodes = [];
 let currentMeta = {};
-let maxEdgeWeight = 1;
 
-const state = { hoveredNode: null, egoMode: false, minWeight: 1 };
+const state = {};
 
 const $ = (id) => document.getElementById(id);
 
+// Colab may emit "(unlabeled)" for a sizeable cluster with no fingerprint match, or
+// "(minor)" for a small one. Both are shown the same way here: "Community # - Uncategorized".
+function displayLabel(rawLabel, communityId){
+  if(!rawLabel || /\(unlabeled\)|\(minor\)/i.test(rawLabel)){
+    return `Community ${communityId} - Uncategorized`;
+  }
+  return rawLabel;
+}
+
+// Strips a trailing ".0" that shows up on Facebook Page IDs pulled in as floats
+// (e.g. "100064000000000.0" -> "100064000000000") so the profile link resolves.
+function cleanFacebookId(idString){
+  return String(idString).replace(/\.0$/, "");
+}
+
 // Colors are derived from the community LABEL (a stable string), not the raw Louvain id
-// (which is not stable across reruns) -- see Colab notebook notes on this exact point.
+// (which is not stable across reruns).
 function labelColor(label){
-  if(!label) return SOLO_COLOR;
+  if(!label) return "#3a5560";
   let hash = 0;
   for(let i=0;i<label.length;i++){ hash = (hash * 31 + label.charCodeAt(i)) | 0; }
   return COMMUNITY_PALETTE[Math.abs(hash) % COMMUNITY_PALETTE.length];
@@ -268,26 +250,23 @@ function buildGraph(nodes, edges, cfg, meta){
   const maxDeg = Math.max(...degrees, 0.0001);
 
   nodes.forEach(n => {
-    const isSolo = !!n.is_solo;
+    const label = displayLabel(n.community_label, n.community);
     const size = 3 + (n.degree_centrality / maxDeg) * 14;
     graph.addNode(n.id, {
       x: n.x, y: n.y,
       size,
       label: n.label || n.id,
-      color: isSolo ? SOLO_COLOR : labelColor(n.community_label),
+      color: labelColor(label),
       _degree: n.degree_centrality || 0,
       _betweenness: n.betweenness_centrality || 0,
       _eigenvector: n.eigenvector_centrality || 0,
-      _communityLabel: n.community_label || "Unassigned",
-      _solo: isSolo,
+      _communityLabel: label,
       _isNumericId: !!n.is_numeric_id,
     });
   });
 
-  maxEdgeWeight = 1;
   edges.forEach((e, i) => {
     if(!graph.hasNode(e.source) || !graph.hasNode(e.target)) return;
-    if(e.weight > maxEdgeWeight) maxEdgeWeight = e.weight;
     try{
       graph.addEdgeWithKey("e" + i, e.source, e.target, {
         type: directed ? "arrow" : "line",
@@ -300,44 +279,17 @@ function buildGraph(nodes, edges, cfg, meta){
 
   currentGraph = graph;
 
-  // Reset view controls per-platform: TikTok defaults to ego-view since it's dense
-  // (12k+ edges); Facebook defaults to showing everything since it's sparse.
-  state.egoMode = (cfg === PLATFORMS.tiktok);
-  state.minWeight = 1;
-  state.hoveredNode = null;
-  $("weight-slider").min = 1;
-  $("weight-slider").max = Math.max(2, Math.min(maxEdgeWeight, 200));
-  $("weight-slider").value = 1;
-  $("weight-value").textContent = "1";
-  updateEdgeModeButtons();
-
   const container = $("graph-container");
   renderer = new Sigma(graph, container, {
     minCameraRatio: 0.05,
     maxCameraRatio: 10,
     labelRenderedSizeThreshold: 8,
-    defaultNodeColor: SOLO_COLOR,
+    defaultNodeColor: "#3a5560",
     renderEdgeLabels: false,
-  });
-
-  renderer.setSetting("edgeReducer", (edge, data) => {
-    const res = { ...data };
-    const attrs = graph.getEdgeAttributes(edge);
-    if(attrs.weight < state.minWeight){ res.hidden = true; return res; }
-    if(state.egoMode){
-      if(!state.hoveredNode){ res.hidden = true; return res; }
-      const extremities = graph.extremities(edge);
-      if(extremities[0] !== state.hoveredNode && extremities[1] !== state.hoveredNode){
-        res.hidden = true;
-      }
-    }
-    return res;
   });
 
   renderer.on("clickNode", ({ node }) => showInfo(node));
   renderer.on("clickStage", () => $("info-panel").classList.remove("visible"));
-  renderer.on("enterNode", ({ node }) => { state.hoveredNode = node; renderer.refresh(); });
-  renderer.on("leaveNode", () => { state.hoveredNode = null; renderer.refresh(); });
 
   updateSummary(graph, cfg.label, directed);
   buildLegend(graph);
@@ -345,25 +297,16 @@ function buildGraph(nodes, edges, cfg, meta){
   $("loading").style.display = "none";
 }
 
-function updateEdgeModeButtons(){
-  $("mode-all").classList.toggle("active", !state.egoMode);
-  $("mode-ego").classList.toggle("active", state.egoMode);
-}
-
 function updateSummary(graph, platformLabel, directed){
-  const solo = graph.filterNodes((n, attrs) => attrs._solo).length;
   const labels = new Set(graph.mapNodes((n, attrs) => attrs._communityLabel));
   $("stat-nodes").textContent = graph.order.toLocaleString();
   $("stat-edges").textContent = graph.size.toLocaleString();
-  $("stat-direction").textContent = directed ? "Directed (share flow)" : "Undirected (co-tagging)";
   $("stat-communities").textContent = labels.size.toLocaleString();
-  $("stat-solo").textContent = solo.toLocaleString() + ` (${((solo/graph.order)*100).toFixed(0)}%)`;
 }
 
 function buildLegend(graph){
   const counts = {};
   graph.forEachNode((n, attrs) => {
-    if(attrs._solo) return;
     counts[attrs._communityLabel] = (counts[attrs._communityLabel]||0) + 1;
   });
   const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
@@ -375,32 +318,28 @@ function buildLegend(graph){
     row.innerHTML = `<span class="legend-dot" style="background:${labelColor(label)}"></span>${label} (${count})`;
     legend.appendChild(row);
   });
-  const soloRow = document.createElement("div");
-  soloRow.className = "legend-item";
-  soloRow.innerHTML = `<span class="legend-dot solo"></span>Solo actor (no cross-account interaction)`;
-  legend.appendChild(soloRow);
 }
 
 function buildFacebookNote(isFacebook){
   const note = $("fb-note");
   if(!isFacebook){ note.classList.remove("visible"); return; }
-  note.innerHTML = `Some node names are numeric — those are <strong>Facebook Page IDs</strong> ` +
-    `(a public username couldn't be resolved during collection). View one via ` +
-    `<code>facebook.com/&lt;id&gt;</code>.`;
+  note.innerHTML = `Some accounts show up as a number instead of a name. That number is the ` +
+    `account's Facebook Page ID, used when a public username wasn't available at the time ` +
+    `of collection. You can open the page directly at <code>facebook.com/&lt;id&gt;</code>.`;
   note.classList.add("visible");
 }
 
 function showInfo(nodeId){
   const attrs = currentGraph.getNodeAttributes(nodeId);
   $("info-name").textContent = attrs.label;
-  $("info-tag").textContent = attrs._solo ? "Solo actor" : attrs._communityLabel;
+  $("info-tag").textContent = attrs._communityLabel;
   $("info-degree").textContent = attrs._degree.toFixed(4);
   $("info-betweenness").textContent = attrs._betweenness.toFixed(4);
   $("info-eigenvector").textContent = attrs._eigenvector.toFixed(4);
 
   const fbLink = $("info-fb-link");
   if(attrs._isNumericId){
-    fbLink.href = `https://www.facebook.com/${attrs.label}`;
+    fbLink.href = `https://www.facebook.com/${cleanFacebookId(attrs.label)}`;
     fbLink.style.display = "inline-block";
   }else{
     fbLink.style.display = "none";
@@ -413,15 +352,6 @@ function showInfo(nodeId){
 }
 
 $("info-close").addEventListener("click", () => $("info-panel").classList.remove("visible"));
-
-$("mode-all").addEventListener("click", () => { state.egoMode = false; updateEdgeModeButtons(); renderer.refresh(); });
-$("mode-ego").addEventListener("click", () => { state.egoMode = true; updateEdgeModeButtons(); renderer.refresh(); });
-
-$("weight-slider").addEventListener("input", (e) => {
-  state.minWeight = Number(e.target.value);
-  $("weight-value").textContent = state.minWeight;
-  renderer.refresh();
-});
 
 let searchDebounce;
 $("search-input").addEventListener("input", (e) => {
