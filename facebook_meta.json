@@ -1,7 +1,7 @@
 {
   "platform": "facebook",
   "directed": true,
-  "generated_from": "(Network) Facebook Data - HPV (1).csv",
+  "generated_from": "(Network) Facebook Data - HPV.csv",
   "node_count": 889,
   "edge_count": 751,
   "self_loop_edges": 392,
@@ -551,8 +551,36 @@
     "louvain_resolution": 1.0,
     "label_min_overlap": 2,
     "layout_iterations": 200,
+    "scaling_ratio": 2.0,
+    "gravity": 1.0,
+    "weight_transform": "none",
+    "dissuade_hubs": false,
+    "use_community_seeding": false,
     "seed": 42,
-    "output_prefix": "facebook"
+    "output_prefix": "facebook",
+    "expansion_factors": [
+      1.0
+    ]
+  },
+  "expansion_factors": [
+    1.0
+  ],
+  "expansion_tags": [
+    "1x"
+  ],
+  "expansion_centroid": {
+    "x": -5.781834602355957,
+    "y": -8.992575645446777
+  },
+  "layout_params": {
+    "scaling_ratio": 2.0,
+    "gravity": 1.0,
+    "max_iter": 200,
+    "weight_transform": "none",
+    "dissuade_hubs_requested": false,
+    "dissuade_hubs_supported": false,
+    "community_seeding": false,
+    "community_seeding_supported": true
   },
   "facebook_id_note": "Numeric node IDs are Facebook Page IDs. View via https://www.facebook.com/<id>"
 }
