@@ -709,13 +709,25 @@ function buildGraph(platform, nodes, edges, cfg, meta){
 // computes its coordinate normalization once, from node extents, at construction
 // time — mutating x/y afterward (as applyExpansion does) does not force that to
 // recompute, so the renderer is deliberately rebuilt after any position change.
+//
+// maxCameraRatio controls how far OUT the camera is allowed to zoom. It was
+// previously capped at 10, which was fine when layouts spanned a small
+// coordinate range. Community-seeded layouts now spread clusters across a much
+// wider range (rings ~1000+ units, communities ~2000+ units apart), so the
+// ratio Sigma actually needs to fit everything on screen can exceed 10 --
+// when that happens the camera gets clamped and can only show a cramped
+// window into the middle of the layout, which looks like clutter even though
+// the underlying coordinates are genuinely spread out. Raised substantially
+// here, and animatedReset() is called right after mount to force Sigma to
+// recompute the fit against the current graph's actual extents rather than
+// reuse whatever ratio it last had.
 function mountRenderer(platform, graph){
   const st = PLATFORM_STATE[platform];
   if(st.renderer){ st.renderer.kill(); st.renderer = null; }
   const container = byId("graph-container", platform);
   st.renderer = new Sigma(graph, container, {
-    minCameraRatio: 0.05,
-    maxCameraRatio: 10,
+    minCameraRatio: 0.01,
+    maxCameraRatio: 500,
     labelRenderedSizeThreshold: 8,
     defaultNodeColor: "#6b7c85",
     defaultEdgeColor: EDGE_COLOR_NORMAL,
@@ -724,6 +736,10 @@ function mountRenderer(platform, graph){
   });
   st.renderer.on("clickNode", ({ node }) => showInfo(platform, node));
   st.renderer.on("clickStage", () => byId("info-panel", platform).classList.remove("visible"));
+  // Forces the camera to re-fit to the graph's real extents immediately after
+  // mount, rather than trusting whatever default/cached framing Sigma applied
+  // at construction time.
+  st.renderer.getCamera().animatedReset({ duration: 0 });
 }
 
 // Builds the Expand control's buttons from whatever expansion tags are actually
