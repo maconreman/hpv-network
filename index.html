@@ -94,13 +94,28 @@
   }
   .expand-control button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
+  /* width is fluid (shrinks with the viewport / whatever space the sidebar
+     leaves) rather than a fixed 250px, so it doesn't overflow or collide with
+     the search box at narrower desktop widths — not just below the 768px
+     mobile breakpoint. The header is a clickable toggle that collapses the
+     body to just the heading, for viewports where any persistent panel over
+     the graph is unwelcome. */
   .left-rail{
-    position:absolute;left:16px;bottom:16px;z-index:10;width:250px;
+    position:absolute;left:16px;bottom:16px;z-index:10;width:min(250px, 34vw);
     background:#ffffff;border:1px solid var(--panel-line);border-radius:10px;
     padding:16px;font-size:12px;max-height:60%;overflow-y:auto;
     box-shadow:0 2px 10px rgba(0,0,0,0.06);
   }
-  .left-rail h3{margin:0 0 10px 0;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .left-rail.collapsed{max-height:none;overflow:visible;padding-bottom:10px;}
+  .left-rail.collapsed .rail-body{display:none;}
+  .left-rail .rail-toggle{
+    display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+    margin:0 0 10px 0;user-select:none;
+  }
+  .left-rail.collapsed .rail-toggle{margin-bottom:0;}
+  .left-rail h3{margin:0;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .rail-chevron{font-family:var(--mono);font-size:11px;color:var(--muted);transition:transform .15s ease;}
+  .left-rail.collapsed .rail-chevron{transform:rotate(-90deg);}
   .stat-row{display:flex;justify-content:space-between;padding:3px 0;font-family:var(--mono);}
   .stat-row span:first-child{color:var(--muted);}
   .stat-row span:last-child{color:var(--ink);text-align:right;}
@@ -143,9 +158,13 @@
   .empty-state{display:none;}
 
   /* ---------- Topic modeling embed (iframe) ---------- */
-  .topic-embed-wrap{margin-top:18px;border:1px solid var(--panel-line);border-radius:10px;overflow:hidden;background:#fff;}
-  .topic-embed-wrap iframe{width:100%;height:900px;border:none;display:block;}
-  .topic-embed-fallback{padding:28px 24px;font-size:13px;color:var(--muted);line-height:1.6;background:var(--panel);}
+  /* Lives inside a .network-page (full-bleed, flex column) so the embed fills
+     whatever vertical space is left below the header, rather than being capped
+     at a fixed pixel height inside a padded, max-width page. BERTopic exports
+     are often taller/wider than a fixed box, which was clipping content. */
+  .topic-embed-wrap{flex:1;min-height:0;overflow:auto;background:#fff;}
+  .topic-embed-wrap iframe{width:100%;height:100%;min-height:100%;border:none;display:block;}
+  .topic-embed-fallback{padding:28px 24px;font-size:13px;color:var(--muted);line-height:1.6;background:var(--panel);height:100%;}
   .topic-embed-fallback code{font-family:var(--mono);font-size:11.5px;color:var(--ink);background:#fff;padding:2px 5px;border-radius:4px;border:1px solid var(--panel-line);}
 
   ::-webkit-scrollbar{width:6px;}
@@ -189,14 +208,14 @@
 
     <div class="nav-section-label">Facebook Results</div>
     <button data-page="facebook-network" class="nav-subitem">Network Analysis</button>
-    <button data-page="facebook-topics" class="nav-subitem">Topic Modeling <span class="tbd-flag">TBD</span></button>
+    <button data-page="facebook-topics" class="nav-subitem">Topic Modeling</button>
 
     <div class="nav-section-label">TikTok Results</div>
     <button data-page="tiktok-network" class="nav-subitem">Network Analysis</button>
-    <button data-page="tiktok-topics" class="nav-subitem">Topic Modeling <span class="tbd-flag">TBD</span></button>
+    <button data-page="tiktok-topics" class="nav-subitem">Topic Modeling</button>
 
     <div class="nav-section-label" style="border-top:1px solid var(--panel-line);"></div>
-    <button data-page="discussion">Discussion <span class="tbd-flag">TBD</span></button>
+    <button data-page="discussion">Discussion</button>
   </nav>
 
   <main id="main">
@@ -258,15 +277,20 @@
           <div class="search-results" id="search-results-facebook"></div>
         </div>
 
-        <div class="left-rail" id="left-rail-facebook">
-          <h3>Network summary</h3>
-          <div class="stat-row"><span>Nodes</span><span id="stat-nodes-facebook">-</span></div>
-          <div class="stat-row"><span>Edges</span><span id="stat-edges-facebook">-</span></div>
-          <div class="stat-row"><span>Communities</span><span id="stat-communities-facebook">-</span></div>
-          <div class="divider"></div>
-          <h3>Legend</h3>
-          <div class="legend" id="legend-facebook"></div>
-          <div class="fb-note" id="fb-note-facebook"></div>
+        <div class="left-rail" id="left-rail-facebook" data-collapsible="facebook">
+          <div class="rail-toggle" data-rail-toggle="facebook">
+            <h3>Network summary</h3>
+            <span class="rail-chevron">▾</span>
+          </div>
+          <div class="rail-body">
+            <div class="stat-row"><span>Nodes</span><span id="stat-nodes-facebook">-</span></div>
+            <div class="stat-row"><span>Edges</span><span id="stat-edges-facebook">-</span></div>
+            <div class="stat-row"><span>Communities</span><span id="stat-communities-facebook">-</span></div>
+            <div class="divider"></div>
+            <h3>Legend</h3>
+            <div class="legend" id="legend-facebook"></div>
+            <div class="fb-note" id="fb-note-facebook"></div>
+          </div>
         </div>
 
         <div class="info-panel" id="info-panel-facebook">
@@ -281,13 +305,16 @@
     </section>
 
     <!-- ============================= FACEBOOK: TOPIC MODELING ============================= -->
-    <section class="page" id="page-facebook-topics">
-      <div class="kicker">Facebook &mdash; Topic Modeling</div>
-      <h1>Topic Modeling Results</h1>
-      <p>This section embeds this project's own BERTopic run for Facebook once it's available (see <code>ARCHITECTURE_TOPIC_MODELING.md</code> for the embedding approach).</p>
+    <section class="page network-page" id="page-facebook-topics">
+      <div class="net-header">
+        <div>
+          <h2>Facebook &mdash; Topic Modeling</h2>
+          <div class="sub">facebook_topics.html</div>
+        </div>
+      </div>
       <div class="topic-embed-wrap" id="topic-embed-facebook">
         <div class="topic-embed-fallback">
-          Not embedded yet. Once <code>facebook_topics.html</code> is placed alongside this page and committed to the repo, it will render here automatically &mdash; no code changes needed.
+          Loading topic modeling results…
         </div>
       </div>
     </section>
@@ -313,15 +340,20 @@
           <div class="search-results" id="search-results-tiktok"></div>
         </div>
 
-        <div class="left-rail" id="left-rail-tiktok">
-          <h3>Network summary</h3>
-          <div class="stat-row"><span>Nodes</span><span id="stat-nodes-tiktok">-</span></div>
-          <div class="stat-row"><span>Edges</span><span id="stat-edges-tiktok">-</span></div>
-          <div class="stat-row"><span>Communities</span><span id="stat-communities-tiktok">-</span></div>
-          <div class="divider"></div>
-          <h3>Legend</h3>
-          <div class="legend" id="legend-tiktok"></div>
-          <div class="fb-note" id="fb-note-tiktok"></div>
+        <div class="left-rail" id="left-rail-tiktok" data-collapsible="tiktok">
+          <div class="rail-toggle" data-rail-toggle="tiktok">
+            <h3>Network summary</h3>
+            <span class="rail-chevron">▾</span>
+          </div>
+          <div class="rail-body">
+            <div class="stat-row"><span>Nodes</span><span id="stat-nodes-tiktok">-</span></div>
+            <div class="stat-row"><span>Edges</span><span id="stat-edges-tiktok">-</span></div>
+            <div class="stat-row"><span>Communities</span><span id="stat-communities-tiktok">-</span></div>
+            <div class="divider"></div>
+            <h3>Legend</h3>
+            <div class="legend" id="legend-tiktok"></div>
+            <div class="fb-note" id="fb-note-tiktok"></div>
+          </div>
         </div>
 
         <div class="info-panel" id="info-panel-tiktok">
@@ -336,13 +368,16 @@
     </section>
 
     <!-- ============================= TIKTOK: TOPIC MODELING ============================= -->
-    <section class="page" id="page-tiktok-topics">
-      <div class="kicker">TikTok &mdash; Topic Modeling</div>
-      <h1>Topic Modeling Results</h1>
-      <p>This section embeds this project's own BERTopic run for TikTok once it's available (see <code>ARCHITECTURE_TOPIC_MODELING.md</code> for the embedding approach).</p>
+    <section class="page network-page" id="page-tiktok-topics">
+      <div class="net-header">
+        <div>
+          <h2>TikTok &mdash; Topic Modeling</h2>
+          <div class="sub">tiktok_topics.html</div>
+        </div>
+      </div>
       <div class="topic-embed-wrap" id="topic-embed-tiktok">
         <div class="topic-embed-fallback">
-          Not embedded yet. Once <code>tiktok_topics.html</code> is placed alongside this page and committed to the repo, it will render here automatically &mdash; no code changes needed.
+          Loading topic modeling results…
         </div>
       </div>
     </section>
@@ -350,7 +385,19 @@
     <section class="page" id="page-discussion">
       <div class="kicker">Discussion</div>
       <h1>Discussion</h1>
-      <div class="tbd-note">This section is in progress, pending the topic modeling pass above and a full read of this pipeline's own network results.</div>
+      <p>This section synthesizes the rebuilt network analysis and topic modeling results above. Each subsection below is a placeholder to be filled in once both platforms' results have been reviewed side by side.</p>
+
+      <h1 style="font-size:16px;margin-top:28px;">Key Findings</h1>
+      <div class="tbd-note">Placeholder — summarize what the rebuilt Facebook and TikTok networks show about key actors, cluster structure, and cross-platform differences, compared against the original paper's findings.</div>
+
+      <h1 style="font-size:16px;margin-top:20px;">Public Health Implications</h1>
+      <div class="tbd-note">Placeholder — what the identified opinion leaders and topic clusters suggest about where HPV misinformation concentrates, and which actors are positioned to counter it.</div>
+
+      <h1 style="font-size:16px;margin-top:20px;">Recommendations</h1>
+      <div class="tbd-note">Placeholder — concrete communication strategies for health authorities, commercial partners, and platform-specific creators, informed by the topic modeling results.</div>
+
+      <h1 style="font-size:16px;margin-top:20px;">Limitations</h1>
+      <div class="tbd-note">Placeholder — data collection window, platform API constraints, and any divergence between this rebuilt pipeline's results and the original paper's one-time analysis.</div>
     </section>
 
   </main>
@@ -408,6 +455,36 @@ function closeMobileNav(){
   sidenav.classList.remove("open");
   navOverlay.classList.remove("visible");
 }
+
+// ================= Network summary rail: collapsible, adaptive by width =================
+// The rail floats over the graph, so at narrower widths (a resized desktop
+// window, a tablet, a split-screen browser — not just phones below the 768px
+// breakpoint) it can crowd out the graph or overlap the search box. Clicking
+// the "Network summary" header toggles it collapsed to just that header. It
+// also starts collapsed by default whenever the viewport is narrower than
+// ~960px, since that's the point the fixed-position rail starts eating a
+// disproportionate share of the graph area; the person can still expand it
+// with one click.
+const RAIL_AUTO_COLLAPSE_WIDTH = 960;
+
+document.querySelectorAll("[data-rail-toggle]").forEach(toggle => {
+  const platform = toggle.dataset.railToggle;
+  toggle.addEventListener("click", () => {
+    byId("left-rail", platform).classList.toggle("collapsed");
+  });
+});
+
+function applyDefaultRailCollapse(){
+  const shouldCollapse = window.innerWidth < RAIL_AUTO_COLLAPSE_WIDTH;
+  document.querySelectorAll(".left-rail[data-collapsible]").forEach(rail => {
+    rail.classList.toggle("collapsed", shouldCollapse);
+  });
+}
+applyDefaultRailCollapse();
+window.addEventListener("resize", () => {
+  clearTimeout(window.__railResizeDebounce);
+  window.__railResizeDebounce = setTimeout(applyDefaultRailCollapse, 200);
+});
 
 // ================= Network Analysis: config + per-platform state =================
 
@@ -644,8 +721,22 @@ function mountRenderer(platform, graph){
 // (i.e. no expansion data at all, e.g. an older JSON export), the control is
 // hidden entirely rather than shown disabled — there'd be nothing to switch
 // between anyway.
+//
+// TikTok's Expand control is disabled outright regardless of available tags
+// (removed per request) — the underlying x_<tag>/y_<tag> data can still be
+// present in tiktok_nodes.json without issue, it's simply never surfaced as a
+// UI control for that platform. Facebook keeps the control.
+const EXPANSION_ENABLED = { facebook: true, tiktok: false };
+
 function buildExpandControls(platform, tags){
   const control = byId("expand-control", platform);
+
+  if(!EXPANSION_ENABLED[platform]){
+    control.innerHTML = "";
+    control.classList.remove("visible");
+    return;
+  }
+
   const sorted = tags.slice().sort((a, b) => tagToFactor(a) - tagToFactor(b));
 
   control.innerHTML = "";
@@ -785,9 +876,10 @@ document.querySelectorAll("[data-close-info]").forEach(btn => {
 
 // ================= Topic Modeling embed (iframe, checked lazily) =================
 // See ARCHITECTURE_TOPIC_MODELING.md for the full design. Each platform's Topic
-// Modeling page tries to embed "<platform>_topics.html" the first time it's
-// opened. If the file isn't present yet, the existing "not embedded yet"
-// placeholder stays in place.
+// Modeling page embeds "<platform>_topics.html" the first time it's opened. The
+// wrap fills the remaining vertical space of its full-bleed page (see
+// .topic-embed-wrap / .network-page in CSS) so the export isn't clipped by a
+// fixed pixel height.
 async function maybeLoadTopicEmbed(platform){
   const st = PLATFORM_STATE[platform];
   if(st.topicsChecked) return;
@@ -798,15 +890,20 @@ async function maybeLoadTopicEmbed(platform){
 
   try{
     const res = await fetch(cfg.topicsFile, { method: "HEAD" });
-    if(!res.ok) return; // leave fallback message in place
+    if(!res.ok){
+      wrap.innerHTML = `<div class="topic-embed-fallback">Couldn't load <code>${cfg.topicsFile}</code>. ` +
+        `Confirm the file is committed to the repo in the same folder as this page, then reload.</div>`;
+      return;
+    }
     wrap.innerHTML = "";
     const iframe = document.createElement("iframe");
     iframe.src = cfg.topicsFile;
     iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
     iframe.loading = "lazy";
     wrap.appendChild(iframe);
-  }catch(_){
-    // No file yet / fetch blocked (e.g. local file:// testing) — fallback message stays.
+  }catch(err){
+    wrap.innerHTML = `<div class="topic-embed-fallback">Couldn't load <code>${cfg.topicsFile}</code>. ` +
+      `Check the browser console for details.</div>`;
   }
 }
 </script>
