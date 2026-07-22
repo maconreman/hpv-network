@@ -685,6 +685,43 @@ function buildGraph(platform, nodes, edges, cfg, meta){
       }catch(_){ /* skip malformed edge */ }
     });
 
+    // Sigma normalizes/fits its camera to whatever the graph's CURRENT
+    // bounding box is, recomputed every time the renderer is (re)built. Since
+    // Expansion scales every node's position outward from a centroid by a
+    // constant factor, the graph's bounding box grows by that same factor --
+    // so Sigma's auto-fit and the expansion cancel out exactly, and every
+    // expansion factor renders as the same view. This was confirmed directly
+    // in the equivalent matplotlib preview (byte-identical PNGs across
+    // factors 1/10/200) and the same cancellation applies here.
+    //
+    // Fix: two invisible anchor nodes are pinned at the corners of a FIXED
+    // window, computed once from the BASE (1x, unexpanded) layout's extent
+    // with padding. Because Sigma's bounding-box calculation includes every
+    // node (including these two), the fit stays locked to this fixed window
+    // regardless of how far real nodes get pushed by expansion -- so higher
+    // factors now visibly push nodes toward/past the anchors, instead of the
+    // view just re-fitting itself around them. These are excluded from
+    // st.nodes / st.nodesById above, so they never appear in search or the
+    // info panel, and applyExpansion() below skips repositioning them.
+    const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const spanX = maxX - minX || 1, spanY = maxY - minY || 1;
+    const baseSpan = Math.max(spanX, spanY);
+    const windowPadding = 1.5; // same concept as the Colab preview's "Window padding x" slider
+    const halfWindow = (baseSpan * windowPadding) / 2;
+    const windowCx = (minX + maxX) / 2, windowCy = (minY + maxY) / 2;
+
+    graph.addNode("__anchor_min", {
+      x: windowCx - halfWindow, y: windowCy - halfWindow,
+      size: 0, color: "#ffffff00", label: "", hidden: true, _isAnchor: true,
+    });
+    graph.addNode("__anchor_max", {
+      x: windowCx + halfWindow, y: windowCy + halfWindow,
+      size: 0, color: "#ffffff00", label: "", hidden: true, _isAnchor: true,
+    });
+    st.fixedWindow = { cx: windowCx, cy: windowCy, halfWindow };
+
     st.graph = graph;
     st.availableTags = getAvailableTags(nodes, meta);
     st.currentTag = "1x";
@@ -804,7 +841,11 @@ function applyExpansion(platform, tag){
   if(!st.graph) return;
   st.currentTag = tag;
 
-  st.graph.forEachNode((node) => {
+  st.graph.forEachNode((node, attrs) => {
+    // Anchors must stay pinned to the fixed base window -- they're what
+    // prevents Sigma's auto-fit from re-normalizing to the expanded extent
+    // and canceling out the effect. Only real data nodes get repositioned.
+    if(attrs._isAnchor) return;
     const raw = st.nodesById.get(node);
     if(!raw) return;
     const newX = (typeof raw[`x_${tag}`] === "number") ? raw[`x_${tag}`] : raw.x;
@@ -817,8 +858,17 @@ function applyExpansion(platform, tag){
 }
 
 function updateSummary(platform, graph){
-  const labels = new Set(graph.mapNodes((n, attrs) => attrs._communityLabel));
-  byId("stat-nodes", platform).textContent = graph.order.toLocaleString();
+  // Anchors are excluded here -- they're a rendering-only device to keep
+  // Sigma's auto-fit pinned to a fixed window (see buildGraph), not real data,
+  // and shouldn't count toward node/community totals.
+  const labels = new Set();
+  let realNodeCount = 0;
+  graph.forEachNode((n, attrs) => {
+    if(attrs._isAnchor) return;
+    realNodeCount++;
+    labels.add(attrs._communityLabel);
+  });
+  byId("stat-nodes", platform).textContent = realNodeCount.toLocaleString();
   byId("stat-edges", platform).textContent = graph.size.toLocaleString();
   byId("stat-communities", platform).textContent = labels.size.toLocaleString();
 }
@@ -826,6 +876,7 @@ function updateSummary(platform, graph){
 function buildLegend(platform, graph){
   const counts = {};
   graph.forEachNode((n, attrs) => {
+    if(attrs._isAnchor) return;
     counts[attrs._communityLabel] = (counts[attrs._communityLabel]||0) + 1;
   });
   const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
@@ -851,6 +902,7 @@ function buildFacebookNote(platform, isFacebook){
 function showInfo(platform, nodeId){
   const st = PLATFORM_STATE[platform];
   const attrs = st.graph.getNodeAttributes(nodeId);
+  if(attrs._isAnchor) return; // rendering-only device, never a real actor
   byId("info-name", platform).textContent = attrs.label;
   byId("info-tag", platform).textContent = attrs._communityLabel;
   byId("info-degree", platform).textContent = attrs._degree.toFixed(4);
