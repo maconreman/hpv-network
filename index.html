@@ -41,6 +41,17 @@
   #sidenav .tbd-flag{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-left:6px;}
   #sidenav button.active .tbd-flag{color:rgba(255,255,255,0.75);}
 
+  /* Section label ("Facebook Results" / "TikTok Results") + indented sub-items
+     (Network Analysis / Topic Modeling) nested directly under it in the sidebar,
+     replacing the old in-page sub-nav tab bar. */
+  #sidenav .nav-section-label{
+    font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--muted);margin:16px 6px 6px 6px;padding-top:12px;border-top:1px solid var(--panel-line);
+  }
+  #sidenav .nav-subitem{padding-left:24px;font-size:13px;}
+  #sidenav .nav-subitem::before{content:"– ";color:var(--muted);}
+  #sidenav button.active.nav-subitem::before{color:rgba(255,255,255,0.75);}
+
   #nav-toggle{display:none;}
 
   /* ---------- Main content area ---------- */
@@ -59,25 +70,9 @@
     border-radius:8px;font-size:13px;color:var(--muted);
   }
 
-  /* ---------- Results pages (Facebook / TikTok) — full-bleed, own layout ---------- */
-  .results-page{padding:0;max-width:none;display:none;}
-  .results-page.active{display:flex;flex-direction:column;height:100%;}
-
-  /* Sub-nav: Network Analysis / Topic Modeling, scoped within one platform's results page */
-  .subnav{
-    display:flex;gap:2px;padding:12px 20px 0 20px;border-bottom:1px solid var(--panel-line);flex:none;background:#fff;
-  }
-  .subnav button{
-    font-family:var(--sans);font-size:13px;background:none;border:none;color:var(--muted);
-    padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;
-  }
-  .subnav button.active{color:var(--ink);font-weight:600;border-bottom-color:var(--accent);}
-
-  .sub-page{display:none;flex:1;min-height:0;flex-direction:column;}
-  .sub-page.active{display:flex;}
-
-  .topics-sub-page{display:none;flex:1;min-height:0;overflow-y:auto;padding:32px 40px;max-width:760px;}
-  .topics-sub-page.active{display:block;}
+  /* ---------- Network Analysis pages (full-bleed, own layout) ---------- */
+  .network-page{padding:0;max-width:none;display:none;}
+  .network-page.active{display:flex;flex-direction:column;height:100%;}
 
   .graph-container{position:relative;flex:1;background:#fbfcfc;min-height:0;}
 
@@ -88,6 +83,9 @@
   .net-header h2{font-size:14px;margin:0 0 2px 0;}
   .net-header .sub{font-family:var(--mono);font-size:10px;color:var(--muted);}
 
+  /* Buttons here are generated at runtime from meta.expansion_tags — see
+     buildExpandControls() — since the set of available factors now comes from
+     the Colab-precomputed JSON rather than a fixed 1x/1.5x/2x assumption. */
   .expand-control{display:none;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted);}
   .expand-control.visible{display:flex;}
   .expand-control button{
@@ -169,12 +167,10 @@
     #nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:90;}
     #nav-overlay.visible{display:block;}
     .page{padding:64px 20px 24px 20px;}
-    .subnav{padding-left:56px;}
-    .net-header{padding-left:20px;flex-wrap:wrap;gap:8px;}
+    .net-header{padding-left:56px;flex-wrap:wrap;gap:8px;}
     .search-box{width:calc(100vw - 32px);left:16px;right:16px;top:auto;bottom:auto;position:absolute;top:16px;}
     .left-rail{width:calc(100vw - 32px);left:16px;right:16px;max-height:40%;bottom:auto;top:calc(16px + 54px);}
     .info-panel{width:calc(100vw - 32px);left:16px;right:16px;}
-    .topics-sub-page{padding:64px 20px 24px 20px;}
   }
 </style>
 </head>
@@ -190,8 +186,16 @@
     <button data-page="background">Background</button>
     <button data-page="problem">Research Problem</button>
     <button data-page="methods">Methods</button>
-    <button data-page="facebook-results">Facebook Results</button>
-    <button data-page="tiktok-results">TikTok Results</button>
+
+    <div class="nav-section-label">Facebook Results</div>
+    <button data-page="facebook-network" class="nav-subitem">Network Analysis</button>
+    <button data-page="facebook-topics" class="nav-subitem">Topic Modeling <span class="tbd-flag">TBD</span></button>
+
+    <div class="nav-section-label">TikTok Results</div>
+    <button data-page="tiktok-network" class="nav-subitem">Network Analysis</button>
+    <button data-page="tiktok-topics" class="nav-subitem">Topic Modeling <span class="tbd-flag">TBD</span></button>
+
+    <div class="nav-section-label" style="border-top:1px solid var(--panel-line);"></div>
     <button data-page="discussion">Discussion <span class="tbd-flag">TBD</span></button>
   </nav>
 
@@ -233,134 +237,112 @@
       <p><strong>Topic modeling.</strong> The original study used BERTopic (with class-based TF-IDF term weighting) in multilingual mode, since posts appear in both English and Filipino.</p>
     </section>
 
-    <!-- ============================= FACEBOOK RESULTS ============================= -->
-    <section class="page results-page" id="page-facebook-results">
-      <div class="subnav" data-platform="facebook">
-        <button data-sub="network" class="active">Network Analysis</button>
-        <button data-sub="topics">Topic Modeling <span class="tbd-flag">TBD</span></button>
-      </div>
-
-      <div class="sub-page active" id="facebook-network-sub">
-        <div class="net-header">
-          <div>
-            <h2>Facebook &mdash; Network Analysis</h2>
-            <div class="sub">facebook_nodes.json / facebook_edges.json</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="expand-control" id="expand-control-facebook">
-              <span>Expand:</span>
-              <button data-factor="1" class="active">1x</button>
-              <button data-factor="1.5">1.5x</button>
-              <button data-factor="2">2x</button>
-            </div>
-          </div>
+    <!-- ============================= FACEBOOK: NETWORK ANALYSIS ============================= -->
+    <section class="page network-page" id="page-facebook-network">
+      <div class="net-header">
+        <div>
+          <h2>Facebook &mdash; Network Analysis</h2>
+          <div class="sub">facebook_nodes.json / facebook_edges.json</div>
         </div>
-
-        <div class="graph-container" id="graph-container-facebook">
-          <div class="loading" id="loading-facebook"><div class="mark">Loading network</div></div>
-          <div class="empty-state" id="empty-state-facebook"><div class="mark"></div></div>
-
-          <div class="search-box" id="search-box-facebook">
-            <input type="text" id="search-input-facebook" placeholder="Find an actor…" autocomplete="off">
-            <div class="search-results" id="search-results-facebook"></div>
-          </div>
-
-          <div class="left-rail" id="left-rail-facebook">
-            <h3>Network summary</h3>
-            <div class="stat-row"><span>Nodes</span><span id="stat-nodes-facebook">-</span></div>
-            <div class="stat-row"><span>Edges</span><span id="stat-edges-facebook">-</span></div>
-            <div class="stat-row"><span>Communities</span><span id="stat-communities-facebook">-</span></div>
-            <div class="divider"></div>
-            <h3>Legend</h3>
-            <div class="legend" id="legend-facebook"></div>
-            <div class="fb-note" id="fb-note-facebook"></div>
-          </div>
-
-          <div class="info-panel" id="info-panel-facebook">
-            <button class="close-btn" data-close-info="facebook">×</button>
-            <div class="name" id="info-name-facebook"></div>
-            <div class="tag" id="info-tag-facebook"></div>
-            <div class="metric"><span>Degree centrality</span><span id="info-degree-facebook"></span></div>
-            <div class="metric"><span>Betweenness</span><span id="info-betweenness-facebook"></span></div>
-            <div class="metric"><span>Eigenvector</span><span id="info-eigenvector-facebook"></span></div>
-          </div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="expand-control" id="expand-control-facebook"></div>
         </div>
       </div>
 
-      <div class="topics-sub-page" id="facebook-topics-sub">
-        <div class="kicker">Facebook &mdash; Topic Modeling</div>
-        <h1>Topic Modeling Results</h1>
-        <p>This section embeds this project's own BERTopic run for Facebook once it's available (see <code>ARCHITECTURE_TOPIC_MODELING.md</code> for the embedding approach).</p>
-        <div class="topic-embed-wrap" id="topic-embed-facebook">
-          <div class="topic-embed-fallback">
-            Not embedded yet. Once <code>facebook_topics.html</code> is placed alongside this page and committed to the repo, it will render here automatically &mdash; no code changes needed.
-          </div>
+      <div class="graph-container" id="graph-container-facebook">
+        <div class="loading" id="loading-facebook"><div class="mark">Loading network</div></div>
+        <div class="empty-state" id="empty-state-facebook"><div class="mark"></div></div>
+
+        <div class="search-box" id="search-box-facebook">
+          <input type="text" id="search-input-facebook" placeholder="Find an actor…" autocomplete="off">
+          <div class="search-results" id="search-results-facebook"></div>
+        </div>
+
+        <div class="left-rail" id="left-rail-facebook">
+          <h3>Network summary</h3>
+          <div class="stat-row"><span>Nodes</span><span id="stat-nodes-facebook">-</span></div>
+          <div class="stat-row"><span>Edges</span><span id="stat-edges-facebook">-</span></div>
+          <div class="stat-row"><span>Communities</span><span id="stat-communities-facebook">-</span></div>
+          <div class="divider"></div>
+          <h3>Legend</h3>
+          <div class="legend" id="legend-facebook"></div>
+          <div class="fb-note" id="fb-note-facebook"></div>
+        </div>
+
+        <div class="info-panel" id="info-panel-facebook">
+          <button class="close-btn" data-close-info="facebook">×</button>
+          <div class="name" id="info-name-facebook"></div>
+          <div class="tag" id="info-tag-facebook"></div>
+          <div class="metric"><span>Degree centrality</span><span id="info-degree-facebook"></span></div>
+          <div class="metric"><span>Betweenness</span><span id="info-betweenness-facebook"></span></div>
+          <div class="metric"><span>Eigenvector</span><span id="info-eigenvector-facebook"></span></div>
         </div>
       </div>
     </section>
 
-    <!-- ============================= TIKTOK RESULTS ============================= -->
-    <section class="page results-page" id="page-tiktok-results">
-      <div class="subnav" data-platform="tiktok">
-        <button data-sub="network" class="active">Network Analysis</button>
-        <button data-sub="topics">Topic Modeling <span class="tbd-flag">TBD</span></button>
-      </div>
-
-      <div class="sub-page active" id="tiktok-network-sub">
-        <div class="net-header">
-          <div>
-            <h2>TikTok &mdash; Network Analysis</h2>
-            <div class="sub">tiktok_nodes.json / tiktok_edges.json</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="expand-control visible" id="expand-control-tiktok">
-              <span>Expand:</span>
-              <button data-factor="1" class="active">1x</button>
-              <button data-factor="1.5">1.5x</button>
-              <button data-factor="2">2x</button>
-            </div>
-          </div>
+    <!-- ============================= FACEBOOK: TOPIC MODELING ============================= -->
+    <section class="page" id="page-facebook-topics">
+      <div class="kicker">Facebook &mdash; Topic Modeling</div>
+      <h1>Topic Modeling Results</h1>
+      <p>This section embeds this project's own BERTopic run for Facebook once it's available (see <code>ARCHITECTURE_TOPIC_MODELING.md</code> for the embedding approach).</p>
+      <div class="topic-embed-wrap" id="topic-embed-facebook">
+        <div class="topic-embed-fallback">
+          Not embedded yet. Once <code>facebook_topics.html</code> is placed alongside this page and committed to the repo, it will render here automatically &mdash; no code changes needed.
         </div>
+      </div>
+    </section>
 
-        <div class="graph-container" id="graph-container-tiktok">
-          <div class="loading" id="loading-tiktok"><div class="mark">Loading network</div></div>
-          <div class="empty-state" id="empty-state-tiktok"><div class="mark"></div></div>
-
-          <div class="search-box" id="search-box-tiktok">
-            <input type="text" id="search-input-tiktok" placeholder="Find an actor…" autocomplete="off">
-            <div class="search-results" id="search-results-tiktok"></div>
-          </div>
-
-          <div class="left-rail" id="left-rail-tiktok">
-            <h3>Network summary</h3>
-            <div class="stat-row"><span>Nodes</span><span id="stat-nodes-tiktok">-</span></div>
-            <div class="stat-row"><span>Edges</span><span id="stat-edges-tiktok">-</span></div>
-            <div class="stat-row"><span>Communities</span><span id="stat-communities-tiktok">-</span></div>
-            <div class="divider"></div>
-            <h3>Legend</h3>
-            <div class="legend" id="legend-tiktok"></div>
-            <div class="fb-note" id="fb-note-tiktok"></div>
-          </div>
-
-          <div class="info-panel" id="info-panel-tiktok">
-            <button class="close-btn" data-close-info="tiktok">×</button>
-            <div class="name" id="info-name-tiktok"></div>
-            <div class="tag" id="info-tag-tiktok"></div>
-            <div class="metric"><span>Degree centrality</span><span id="info-degree-tiktok"></span></div>
-            <div class="metric"><span>Betweenness</span><span id="info-betweenness-tiktok"></span></div>
-            <div class="metric"><span>Eigenvector</span><span id="info-eigenvector-tiktok"></span></div>
-          </div>
+    <!-- ============================= TIKTOK: NETWORK ANALYSIS ============================= -->
+    <section class="page network-page" id="page-tiktok-network">
+      <div class="net-header">
+        <div>
+          <h2>TikTok &mdash; Network Analysis</h2>
+          <div class="sub">tiktok_nodes.json / tiktok_edges.json</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="expand-control" id="expand-control-tiktok"></div>
         </div>
       </div>
 
-      <div class="topics-sub-page" id="tiktok-topics-sub">
-        <div class="kicker">TikTok &mdash; Topic Modeling</div>
-        <h1>Topic Modeling Results</h1>
-        <p>This section embeds this project's own BERTopic run for TikTok once it's available (see <code>ARCHITECTURE_TOPIC_MODELING.md</code> for the embedding approach).</p>
-        <div class="topic-embed-wrap" id="topic-embed-tiktok">
-          <div class="topic-embed-fallback">
-            Not embedded yet. Once <code>tiktok_topics.html</code> is placed alongside this page and committed to the repo, it will render here automatically &mdash; no code changes needed.
-          </div>
+      <div class="graph-container" id="graph-container-tiktok">
+        <div class="loading" id="loading-tiktok"><div class="mark">Loading network</div></div>
+        <div class="empty-state" id="empty-state-tiktok"><div class="mark"></div></div>
+
+        <div class="search-box" id="search-box-tiktok">
+          <input type="text" id="search-input-tiktok" placeholder="Find an actor…" autocomplete="off">
+          <div class="search-results" id="search-results-tiktok"></div>
+        </div>
+
+        <div class="left-rail" id="left-rail-tiktok">
+          <h3>Network summary</h3>
+          <div class="stat-row"><span>Nodes</span><span id="stat-nodes-tiktok">-</span></div>
+          <div class="stat-row"><span>Edges</span><span id="stat-edges-tiktok">-</span></div>
+          <div class="stat-row"><span>Communities</span><span id="stat-communities-tiktok">-</span></div>
+          <div class="divider"></div>
+          <h3>Legend</h3>
+          <div class="legend" id="legend-tiktok"></div>
+          <div class="fb-note" id="fb-note-tiktok"></div>
+        </div>
+
+        <div class="info-panel" id="info-panel-tiktok">
+          <button class="close-btn" data-close-info="tiktok">×</button>
+          <div class="name" id="info-name-tiktok"></div>
+          <div class="tag" id="info-tag-tiktok"></div>
+          <div class="metric"><span>Degree centrality</span><span id="info-degree-tiktok"></span></div>
+          <div class="metric"><span>Betweenness</span><span id="info-betweenness-tiktok"></span></div>
+          <div class="metric"><span>Eigenvector</span><span id="info-eigenvector-tiktok"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================= TIKTOK: TOPIC MODELING ============================= -->
+    <section class="page" id="page-tiktok-topics">
+      <div class="kicker">TikTok &mdash; Topic Modeling</div>
+      <h1>Topic Modeling Results</h1>
+      <p>This section embeds this project's own BERTopic run for TikTok once it's available (see <code>ARCHITECTURE_TOPIC_MODELING.md</code> for the embedding approach).</p>
+      <div class="topic-embed-wrap" id="topic-embed-tiktok">
+        <div class="topic-embed-fallback">
+          Not embedded yet. Once <code>tiktok_topics.html</code> is placed alongside this page and committed to the repo, it will render here automatically &mdash; no code changes needed.
         </div>
       </div>
     </section>
@@ -380,12 +362,11 @@
    Reads <prefix>_nodes.json / <prefix>_edges.json / <prefix>_meta.json produced
    by the Colab pipeline. No backend, no build step.
 
-   Facebook and TikTok each get their own page, their own graph container, and
-   their own Sigma renderer instance (see PLATFORM_STATE below). They no longer
-   share a single container/renderer pair — that sharing was the root cause of
-   the summary/search/legend intermittently not appearing: killing and
-   rebuilding one shared renderer on every toggle click raced against the
-   summary/legend/search DOM updates tied to it.
+   Facebook and TikTok each have their own full sidebar page for Network
+   Analysis and their own full page for Topic Modeling (4 pages total),
+   navigated directly from the sidebar rather than an in-page sub-nav tab bar.
+   Each platform still keeps its own container/renderer/state — see
+   PLATFORM_STATE — so nothing races between the two platforms.
 ------------------------------------------------------------------------- */
 
 // ================= Site shell: side nav + mobile drawer =================
@@ -397,10 +378,24 @@ function showPage(key){
   pageButtons.forEach(b => b.classList.toggle("active", b.dataset.page === key));
   closeMobileNav();
 
-  if(key === "facebook-results") maybeInitNetwork("facebook");
-  if(key === "tiktok-results") maybeInitNetwork("tiktok");
+  if(key === "facebook-network") onOpenNetworkPage("facebook");
+  if(key === "tiktok-network") onOpenNetworkPage("tiktok");
+  if(key === "facebook-topics") maybeLoadTopicEmbed("facebook");
+  if(key === "tiktok-topics") maybeLoadTopicEmbed("tiktok");
 }
 pageButtons.forEach(btn => btn.addEventListener("click", () => showPage(btn.dataset.page)));
+
+function onOpenNetworkPage(platform){
+  const st = PLATFORM_STATE[platform];
+  if(!st.initialized){
+    st.initialized = true;
+    loadPlatform(platform);
+  }else if(st.renderer){
+    // Container may have been hidden (zero-size) while another page was showing;
+    // a visible-but-stale renderer needs a refresh, not a full rebuild.
+    st.renderer.refresh();
+  }
+}
 
 const sidenav = document.getElementById("sidenav");
 const navOverlay = document.getElementById("nav-overlay");
@@ -413,28 +408,6 @@ function closeMobileNav(){
   sidenav.classList.remove("open");
   navOverlay.classList.remove("visible");
 }
-
-// ================= Sub-nav: Network Analysis / Topic Modeling =================
-document.querySelectorAll(".subnav").forEach(nav => {
-  const platform = nav.dataset.platform;
-  nav.querySelectorAll("button[data-sub]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      nav.querySelectorAll("button[data-sub]").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const sub = btn.dataset.sub;
-      document.getElementById(`${platform}-network-sub`).classList.toggle("active", sub === "network");
-      document.getElementById(`${platform}-topics-sub`).classList.toggle("active", sub === "topics");
-      if(sub === "network"){
-        maybeInitNetwork(platform);
-        // Container may have been hidden (zero-size) while Topic Modeling was
-        // showing; a visible-but-stale renderer needs a refresh, not a rebuild.
-        const st = PLATFORM_STATE[platform];
-        if(st.renderer) st.renderer.refresh();
-      }
-      if(sub === "topics") maybeLoadTopicEmbed(platform);
-    });
-  });
-});
 
 // ================= Network Analysis: config + per-platform state =================
 
@@ -451,7 +424,12 @@ const PLATFORM_COLOR_OVERRIDES = {
   tiktok: {
     "OB-GYN / Reproductive Health": "#C9A227",
     "Dermatology / Skincare": "#D46FB5",
-    "Beauty & Lifestyle": "#1A2327",
+    // Was #1A2327 — nearly identical to the page's own --ink color, which made
+    // this cluster read as "close to black" rather than as a distinct hue.
+    // Swapped for Okabe-Ito teal-green: clearly distinct from both the gold
+    // (OB-GYN) and pink (Dermatology) clusters already in use, and nowhere
+    // near black or the page's text/background colors.
+    "Beauty & Lifestyle": "#009E73",
   },
   facebook: {
     "Health & Government Orgs": "#0072B2",
@@ -460,36 +438,31 @@ const PLATFORM_COLOR_OVERRIDES = {
   },
 };
 
-// Edge coloring. Previous version used rgba()-free hex but at low alpha (0x40/0x59,
-// ~25-35%), which read as near-invisible on white, especially for arrowheads —
-// Sigma's arrow program draws the arrowhead using this same edge color, so a faint
-// edge means a faint (functionally invisible) arrow. Bumped to a darker, more
-// saturated slate-blue at much higher opacity for real edges; self-loops stay
-// visually de-emphasized (they don't represent cross-account flow) but are still
-// clearly visible rather than near-white.
+// Edge coloring: darker, higher-opacity slate-blue so arrows are actually visible
+// against the white background (previous low-alpha gray made arrowheads
+// near-invisible). defaultEdgeColor is also set explicitly on the Sigma renderer
+// below as a guaranteed fallback.
 const EDGE_COLOR_NORMAL = "#2b4a63d9";   // slate blue, ~85% opacity
 const EDGE_COLOR_SELFLOOP = "#8fa3ad80"; // muted gray, ~50% opacity
 
 // One isolated state object per platform: its own graph, renderer, cached data,
-// centroid, and expand factor. Nothing here is shared across platforms, which is
-// what makes the two results pages independent instead of racing each other.
+// and current expansion tag. Nothing here is shared across platforms.
 function freshPlatformState(){
   return {
     renderer: null,
     graph: null,
     nodes: [],
+    nodesById: new Map(),   // id -> raw node record (carries x_<tag>/y_<tag> fields)
     meta: {},
-    globalCentroid: { x: 0, y: 0 },
-    communityCentroids: {},   // community_label -> {x, y} (base, pre-expansion)
-    expandFactor: 1,
+    availableTags: ["1x"],  // from meta.expansion_tags, with fallback detection
+    currentTag: "1x",
     initialized: false,
-    cache: null,              // { nodes, edges, meta } once fetched
+    cache: null,            // { nodes, edges, meta } once fetched
     topicsChecked: false,
   };
 }
 const PLATFORM_STATE = { facebook: freshPlatformState(), tiktok: freshPlatformState() };
 
-const $$ = (id) => document.getElementById(id);
 const byId = (base, platform) => document.getElementById(`${base}-${platform}`);
 
 function labelColor(platform, label){
@@ -516,14 +489,6 @@ function displayLabel(rawLabel, communityId){
     return `Community ${communityId} - Uncategorized`;
   }
   return rawLabel;
-}
-
-function maybeInitNetwork(platform){
-  const st = PLATFORM_STATE[platform];
-  if(!st.initialized){
-    st.initialized = true;
-    loadPlatform(platform);
-  }
 }
 
 async function loadPlatform(platform){
@@ -564,6 +529,33 @@ async function loadPlatform(platform){
   buildGraph(platform, nodes, edges, cfg, meta);
 }
 
+// Determines which expansion tags are actually available for this dataset.
+// Prefers meta.expansion_tags (written by the Colab pipeline). Falls back to
+// scanning a node record for x_<tag> keys, for JSON exported before meta
+// carried this field. Falls back to ["1x"] (no expansion data at all) for
+// older exports entirely, so the control gracefully disappears instead of
+// erroring against missing fields.
+function getAvailableTags(nodes, meta){
+  if(meta && Array.isArray(meta.expansion_tags) && meta.expansion_tags.length){
+    return meta.expansion_tags.slice();
+  }
+  if(nodes && nodes.length){
+    const keys = Object.keys(nodes[0]).filter(k => /^x_/.test(k));
+    if(keys.length) return keys.map(k => k.slice(2));
+  }
+  return ["1x"];
+}
+
+function tagToFactor(tag){
+  const numeric = tag.replace(/x$/i, "").replace("_", ".");
+  const val = parseFloat(numeric);
+  return isNaN(val) ? 1 : val;
+}
+
+function tagLabel(tag){
+  return tag.replace("_", ".");
+}
+
 function buildGraph(platform, nodes, edges, cfg, meta){
   const st = PLATFORM_STATE[platform];
   try{
@@ -572,26 +564,17 @@ function buildGraph(platform, nodes, edges, cfg, meta){
     const directed = typeof meta.directed === "boolean" ? meta.directed : cfg.directedDefault;
     const graph = new graphology.Graph({ multi: true, type: "directed" });
     st.nodes = nodes;
+    st.nodesById = new Map(nodes.map(n => [n.id, n]));
 
     const degrees = nodes.map(n => n.degree_centrality || 0);
     const maxDeg = Math.max(...degrees, 0.0001);
 
-    let sumX = 0, sumY = 0;
-    const communitySums = {}; // label -> {sx, sy, n}
-
     nodes.forEach(n => {
       const label = displayLabel(n.community_label, n.community);
       const size = 3 + (n.degree_centrality / maxDeg) * 14;
-      sumX += n.x; sumY += n.y;
-
-      if(!communitySums[label]) communitySums[label] = { sx: 0, sy: 0, n: 0 };
-      communitySums[label].sx += n.x;
-      communitySums[label].sy += n.y;
-      communitySums[label].n += 1;
 
       graph.addNode(n.id, {
         x: n.x, y: n.y,
-        baseX: n.x, baseY: n.y,
         size,
         label: n.label || n.id,
         color: communityColor(platform, label),
@@ -602,14 +585,6 @@ function buildGraph(platform, nodes, edges, cfg, meta){
         _isNumericId: !!n.is_numeric_id,
       });
     });
-
-    st.globalCentroid = { x: sumX / nodes.length, y: sumY / nodes.length };
-    st.communityCentroids = {};
-    Object.entries(communitySums).forEach(([label, s]) => {
-      st.communityCentroids[label] = { x: s.sx / s.n, y: s.sy / s.n };
-    });
-    st.expandFactor = 1;
-    resetExpandButtons(platform);
 
     edges.forEach((e, i) => {
       if(!graph.hasNode(e.source) || !graph.hasNode(e.target)) return;
@@ -624,8 +599,11 @@ function buildGraph(platform, nodes, edges, cfg, meta){
     });
 
     st.graph = graph;
-    mountRenderer(platform, graph);
+    st.availableTags = getAvailableTags(nodes, meta);
+    st.currentTag = "1x";
 
+    mountRenderer(platform, graph);
+    buildExpandControls(platform, st.availableTags);
     updateSummary(platform, graph);
     buildLegend(platform, graph);
     buildFacebookNote(platform, cfg === PLATFORMS.facebook);
@@ -644,10 +622,6 @@ function buildGraph(platform, nodes, edges, cfg, meta){
 // computes its coordinate normalization once, from node extents, at construction
 // time — mutating x/y afterward (as applyExpansion does) does not force that to
 // recompute, so the renderer is deliberately rebuilt after any position change.
-//
-// defaultEdgeColor is set explicitly (not left to rely on per-edge color alone) so
-// the arrow/edge program always has an unambiguous, high-contrast fallback instead
-// of silently drawing arrowheads in whatever built-in default Sigma otherwise uses.
 function mountRenderer(platform, graph){
   const st = PLATFORM_STATE[platform];
   if(st.renderer){ st.renderer.kill(); st.renderer = null; }
@@ -665,64 +639,65 @@ function mountRenderer(platform, graph){
   st.renderer.on("clickStage", () => byId("info-panel", platform).classList.remove("visible"));
 }
 
-// "Explode by group": two-level expansion rather than a single uniform scale from
-// one global centroid. A uniform scale-from-global-centroid (the previous
-// implementation) moves every node by the same factor relative to the same point,
-// which changes overall zoom but leaves every node exactly as close to its
-// neighbors as before — visually it looked like nothing had "expanded".
-//
-// Here, each community's own centroid is first pushed outward from the global
-// centroid (separating clusters from each other), and then each node is pushed
-// outward from *its own* community's centroid (spreading out nodes within a
-// cluster). Cluster separation is amplified relative to intra-cluster spread so
-// the two effects are visually distinguishable instead of collapsing back into a
-// single uniform scale. Always computed from baseX/baseY so repeated factor
-// changes never compound.
-function applyExpansion(platform, factor){
+// Builds the Expand control's buttons from whatever expansion tags are actually
+// available for this dataset (see getAvailableTags). If only one tag exists
+// (i.e. no expansion data at all, e.g. an older JSON export), the control is
+// hidden entirely rather than shown disabled — there'd be nothing to switch
+// between anyway.
+function buildExpandControls(platform, tags){
+  const control = byId("expand-control", platform);
+  const sorted = tags.slice().sort((a, b) => tagToFactor(a) - tagToFactor(b));
+
+  control.innerHTML = "";
+  if(sorted.length <= 1){
+    control.classList.remove("visible");
+    return;
+  }
+
+  const labelSpan = document.createElement("span");
+  labelSpan.textContent = "Expand:";
+  control.appendChild(labelSpan);
+
+  sorted.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.textContent = tagLabel(tag);
+    btn.dataset.tag = tag;
+    if(tag === "1x") btn.classList.add("active");
+    btn.addEventListener("click", () => {
+      control.querySelectorAll("button[data-tag]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyExpansion(platform, tag);
+    });
+    control.appendChild(btn);
+  });
+
+  control.classList.add("visible");
+}
+
+// Swaps every node's position to its pre-computed Gephi-style Expansion
+// coordinates for the selected factor (x_<tag>/y_<tag>, computed in the Colab
+// pipeline as a flat uniform scale from the layout's centroid — see
+// compute_expansion_layouts in the notebook). No client-side centroid math here
+// anymore: this is a direct field read, so the browser can't drift from what
+// the pipeline actually computed. Falls back to the node's base x/y if a given
+// tag is missing on a specific node (shouldn't happen, but avoids a broken
+// position rather than throwing).
+function applyExpansion(platform, tag){
   const st = PLATFORM_STATE[platform];
   if(!st.graph) return;
-  st.expandFactor = factor;
+  st.currentTag = tag;
 
-  const clusterFactor = 1 + (factor - 1) * 1.8; // push clusters apart more...
-  const nodeFactor = factor;                    // ...than nodes spread within a cluster
-
-  const gc = st.globalCentroid;
-
-  st.graph.forEachNode((node, attrs) => {
-    const label = attrs._communityLabel;
-    const cc = st.communityCentroids[label] || gc;
-
-    const ccNewX = gc.x + (cc.x - gc.x) * clusterFactor;
-    const ccNewY = gc.y + (cc.y - gc.y) * clusterFactor;
-
-    const newX = ccNewX + (attrs.baseX - cc.x) * nodeFactor;
-    const newY = ccNewY + (attrs.baseY - cc.y) * nodeFactor;
-
+  st.graph.forEachNode((node) => {
+    const raw = st.nodesById.get(node);
+    if(!raw) return;
+    const newX = (typeof raw[`x_${tag}`] === "number") ? raw[`x_${tag}`] : raw.x;
+    const newY = (typeof raw[`y_${tag}`] === "number") ? raw[`y_${tag}`] : raw.y;
     st.graph.setNodeAttribute(node, "x", newX);
     st.graph.setNodeAttribute(node, "y", newY);
   });
 
   mountRenderer(platform, st.graph);
 }
-
-function resetExpandButtons(platform){
-  const control = byId("expand-control", platform);
-  if(!control) return;
-  control.querySelectorAll("button").forEach(b => {
-    b.classList.toggle("active", parseFloat(b.dataset.factor) === 1);
-  });
-}
-
-document.querySelectorAll(".expand-control").forEach(control => {
-  const platform = control.id.replace("expand-control-", "");
-  control.querySelectorAll("button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      control.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      applyExpansion(platform, parseFloat(btn.dataset.factor));
-    });
-  });
-});
 
 function updateSummary(platform, graph){
   const labels = new Set(graph.mapNodes((n, attrs) => attrs._communityLabel));
@@ -809,11 +784,10 @@ document.querySelectorAll("[data-close-info]").forEach(btn => {
 });
 
 // ================= Topic Modeling embed (iframe, checked lazily) =================
-// See ARCHITECTURE_TOPIC_MODELING.md for the full design. In short: each platform's
-// Topic Modeling sub-page tries to embed "<platform>_topics.html" (a standalone
-// BERTopic HTML export) in an iframe the first time that sub-tab is opened. If the
-// file isn't present yet (404 / fetch failure), the pre-existing "not embedded yet"
-// placeholder stays in place — nothing breaks, no console-visible dashboard error.
+// See ARCHITECTURE_TOPIC_MODELING.md for the full design. Each platform's Topic
+// Modeling page tries to embed "<platform>_topics.html" the first time it's
+// opened. If the file isn't present yet, the existing "not embedded yet"
+// placeholder stays in place.
 async function maybeLoadTopicEmbed(platform){
   const st = PLATFORM_STATE[platform];
   if(st.topicsChecked) return;
