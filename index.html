@@ -162,6 +162,10 @@
      whatever vertical space is left below the header, rather than being capped
      at a fixed pixel height inside a padded, max-width page. BERTopic exports
      are often taller/wider than a fixed box, which was clipping content. */
+  .topic-summary{
+    flex:none;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--panel-line);
+    font-size:13px;line-height:1.6;color:var(--ink);
+  }
   .topic-embed-wrap{flex:1;min-height:0;overflow:auto;background:#fff;}
   .topic-embed-wrap iframe{width:100%;height:100%;min-height:100%;border:none;display:block;}
   .topic-embed-fallback{padding:28px 24px;font-size:13px;color:var(--muted);line-height:1.6;background:var(--panel);height:100%;}
@@ -312,6 +316,7 @@
           <div class="sub">facebook_topics.html</div>
         </div>
       </div>
+      <div class="topic-summary">Institutional posts &mdash; vaccination promotion and public health campaigns &mdash; cluster tightly together, while anti-vaccine safety content splits off into smaller, isolated topic clusters rather than joining the mainstream conversation.</div>
       <div class="topic-embed-wrap" id="topic-embed-facebook">
         <div class="topic-embed-fallback">
           Loading topic modeling results…
@@ -375,6 +380,7 @@
           <div class="sub">tiktok_topics.html</div>
         </div>
       </div>
+      <div class="topic-summary">Content splits between professional health advocacy and viral, commercial home-remedy promotion, with general sexual health literacy acting as the connecting thread between the two.</div>
       <div class="topic-embed-wrap" id="topic-embed-tiktok">
         <div class="topic-embed-fallback">
           Loading topic modeling results…
@@ -385,23 +391,27 @@
     <section class="page" id="page-discussion">
       <div class="kicker">Discussion</div>
       <h1>Discussion</h1>
-      <p>This section synthesizes the rebuilt network analysis and topic modeling results above. Each subsection below is a placeholder to be filled in once both platforms' results have been reviewed side by side.</p>
+      <p>Effective HPV vaccine communication turns out to be platform-dependent. Facebook and TikTok need different interventions, because the two platforms are fragmented in different ways and for different reasons.</p>
 
       <h1 style="font-size:16px;margin-top:28px;">Key Findings</h1>
-      <div class="tbd-note">Placeholder — summarize what the rebuilt Facebook and TikTok networks show about key actors, cluster structure, and cross-platform differences, compared against the original paper's findings.</div>
+      <p>The network layer (who is talking) and the topic layer (what they're talking about) tell complementary stories, not the same one:</p>
+      <p><strong>Facebook</strong> shows high network modularity: a dense institutional core of health agencies and commercial pages, separated from isolated peripheral clusters where vaccine safety debates play out. At the topic level, that same split shows up as institutional posts (vaccination promotion, public health campaigns) clustering tightly apart from anti-vaccine safety content, which fragments into smaller, isolated echo chambers rather than joining the mainstream conversation.</p>
+      <p><strong>TikTok</strong> shows the opposite network pattern &mdash; low modularity, a single interconnected creator community rather than separate silos. But that surface-level interconnection masks a real divide at the topic level: a fairly clean split between professional health advocacy content and viral, commercial home-remedy promotion, with general sexual-health literacy acting as the thread connecting the two.</p>
 
       <h1 style="font-size:16px;margin-top:20px;">Public Health Implications</h1>
-      <div class="tbd-note">Placeholder — what the identified opinion leaders and topic clusters suggest about where HPV misinformation concentrates, and which actors are positioned to counter it.</div>
+      <p>The two platforms' misinformation problems aren't the same problem. On Facebook, misinformation reads as ideological and brand-targeted &mdash; it organizes around specific vaccine-safety framing and terms (e.g., "Gardasil") inside closed, hard-to-reach communities. On TikTok, misinformation is more commercial and product-driven: creators promote unverified home remedies to users who are looking for quick symptom relief, not necessarily people arguing against vaccination as a policy position.</p>
 
       <h1 style="font-size:16px;margin-top:20px;">Recommendations</h1>
-      <div class="tbd-note">Placeholder — concrete communication strategies for health authorities, commercial partners, and platform-specific creators, informed by the topic modeling results.</div>
+      <p>On Facebook, outreach needs to actively penetrate the isolated peripheral clusters where safety concerns are already circulating, rather than only reinforcing messaging within the already-convinced institutional core.</p>
+      <p>On TikTok, health authorities are better served by occupying the topics that already bridge the two sides &mdash; general sexual health literacy and symptom awareness &mdash; since that's the connective tissue between professional and commercial content, and the most realistic point to redirect users from self-treatment toward evidence-based care.</p>
 
       <h1 style="font-size:16px;margin-top:20px;">Limitations</h1>
-      <div class="tbd-note">Placeholder — data collection window, platform API constraints, and any divergence between this rebuilt pipeline's results and the original paper's one-time analysis.</div>
+      <p>This dashboard's network layer is a from-scratch Python rebuild of the original published analysis (see Methods), while the topic-modeling layer reflects this project's own BERTopic pass rather than the original paper's one-time topic counts &mdash; the two won't share identical topic numbers or boundaries, by design. Findings are also bounded by each platform's API access at collection time and the Jan 2020&ndash;Jul 2024 window (with a supplemental TikTok pull in Feb 2025), so more recent shifts in either platform's discourse aren't reflected here.</p>
     </section>
 
   </main>
 </div>
+
 
 <script>
 /* -------------------------------------------------------------------------
