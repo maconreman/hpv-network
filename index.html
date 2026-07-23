@@ -764,7 +764,15 @@ function mountRenderer(platform, graph){
   st.renderer = new Sigma(graph, container, {
     minCameraRatio: 0.01,
     maxCameraRatio: 500,
-    labelRenderedSizeThreshold: 8,
+    // Was 8 -- set back when the camera auto-fit the whole graph, so most
+    // nodes rendered small on screen and few crossed this threshold at once.
+    // DEFAULT_ZOOM_RATIO (0.20, ~5x zoom-in) and NODE_SIZE_MULTIPLIER (2.5x)
+    // together mean far more nodes now exceed 8px on screen simultaneously,
+    // which is what caused labels to overlap into unreadable clutter in the
+    // default view. Raised so only the largest, highest-degree hub nodes
+    // label by default; smaller nodes still get labeled on click (via
+    // showInfo) or search, they just don't compete for space unprompted.
+    labelRenderedSizeThreshold: 24,
     defaultNodeColor: "#6b7c85",
     defaultEdgeColor: EDGE_COLOR_NORMAL,
     labelColor: { color: "#1a2327" },
