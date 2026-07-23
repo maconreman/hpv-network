@@ -708,7 +708,22 @@ function buildGraph(platform, nodes, edges, cfg, meta){
     const minY = Math.min(...ys), maxY = Math.max(...ys);
     const spanX = maxX - minX || 1, spanY = maxY - minY || 1;
     const baseSpan = Math.max(spanX, spanY);
-    const windowPadding = 1.5; // same concept as the Colab preview's "Window padding x" slider
+
+    // windowPadding must be at least as large as the biggest expansion factor
+    // this dataset was actually built with -- otherwise, once expansion pushes
+    // real nodes past the anchor window's fixed size, Sigma's auto-fit reverts
+    // to chasing the (now-larger) real data again, silently undoing the whole
+    // fix. Derived from meta.expansion_factors (falling back to 1 if absent),
+    // with extra headroom so the largest factor doesn't sit exactly at the
+    // window's edge. A hardcoded constant here (e.g. 1.5) breaks the moment
+    // any configured expansion factor exceeds it -- confirmed directly against
+    // a real export where expansion_factors=[1,3] made a fixed 1.5 padding
+    // too small, since real 3x-expanded nodes spanned roughly double the
+    // anchor window's size.
+    const configuredFactors = (meta.expansion_factors && meta.expansion_factors.length)
+      ? meta.expansion_factors : [1.0];
+    const maxConfiguredFactor = Math.max(...configuredFactors, 1.0);
+    const windowPadding = maxConfiguredFactor * 1.2;
     const halfWindow = (baseSpan * windowPadding) / 2;
     const windowCx = (minX + maxX) / 2, windowCy = (minY + maxY) / 2;
 
