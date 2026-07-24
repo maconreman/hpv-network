@@ -541,14 +541,23 @@ const EDGE_COLOR_SELFLOOP = "#8fa3ad80"; // muted gray, ~50% opacity
 // across factors 1/10/200 in matplotlib, and the same cancellation applies to
 // Sigma's own normalization). These two constants are the levers that
 // actually matter now:
-//   DEFAULT_ZOOM_RATIO: camera ratio set explicitly after mount (NOT the
+//   ZOOM_RATIO_BY_PLATFORM: camera ratio set explicitly after mount (NOT the
 //     default auto-fit ratio of 1, which shows 100% of the graph). Smaller
 //     means more zoomed in. 0.2 matched the preview screenshot that looked
-//     right (title read "window: fixed at base layout x0.20").
-//   NODE_SIZE_MULTIPLIER: applied to every node's computed size (see
-//     buildGraph). 2.5 matched the "Node size x: 2.50" preview setting.
-const DEFAULT_ZOOM_RATIO = 0.20;
-const NODE_SIZE_MULTIPLIER = 2.5;
+//     right (title read "window: fixed at base layout x0.20") for TikTok.
+//   NODE_SIZE_MULTIPLIER_BY_PLATFORM: applied to every node's computed size
+//     (see buildGraph). 2.5 matched the "Node size x: 2.50" preview setting.
+//
+// Split per platform (was a single shared constant): TikTok's layout carries
+// ~31 far-flung outlier nodes that inflate Sigma's normalized bounding box to
+// roughly 6x the size of the dense core, so a single zoom ratio tuned for
+// TikTok crams Facebook's much sparser (751-edge) graph into a tiny corner,
+// and vice versa. DEFAULT_ZOOM_RATIO / NODE_SIZE_MULTIPLIER remain as
+// fallbacks for any platform key not listed below.
+const ZOOM_RATIO_BY_PLATFORM = { facebook: 0.40, tiktok: 0.20 };
+const NODE_SIZE_MULTIPLIER_BY_PLATFORM = { facebook: 2.5, tiktok: 2.5 };
+const DEFAULT_ZOOM_RATIO = 0.20;      // fallback if a platform key is missing
+const NODE_SIZE_MULTIPLIER = 2.5;     // fallback
 
 // One isolated state object per platform: its own graph, renderer, cached data,
 // and current expansion tag. Nothing here is shared across platforms.
@@ -677,13 +686,15 @@ function buildGraph(platform, nodes, edges, cfg, meta){
     nodes.forEach(n => {
       const label = displayLabel(n.community_label, n.community);
       // Node size multiplier confirmed against the Colab preview: 1x
-      // coordinates + a tight camera zoom (see DEFAULT_ZOOM_RATIO below) +
-      // 2.5x node size is what actually reproduced the Gephi-like look --
+      // coordinates + a tight camera zoom (see ZOOM_RATIO_BY_PLATFORM below) +
+      // a larger node size is what actually reproduced the Gephi-like look --
       // NOT a larger expansion factor. Sigma's auto-fit was canceling out
       // any expansion factor regardless of coordinate scale (see
       // applyExpansion/mountRenderer notes), so bigger, more zoomed-in
-      // rendering of the natural (1x) layout is the actual lever.
-      const size = (3 + (n.degree_centrality / maxDeg) * 14) * NODE_SIZE_MULTIPLIER;
+      // rendering of the natural (1x) layout is the actual lever. Multiplier
+      // is now per-platform (see top of file) rather than shared.
+      const sizeMult = NODE_SIZE_MULTIPLIER_BY_PLATFORM[platform] ?? NODE_SIZE_MULTIPLIER;
+      const size = (3 + (n.degree_centrality / maxDeg) * 14) * sizeMult;
 
       graph.addNode(n.id, {
         x: n.x, y: n.y,
@@ -766,12 +777,12 @@ function mountRenderer(platform, graph){
     maxCameraRatio: 500,
     // Was 8 -- set back when the camera auto-fit the whole graph, so most
     // nodes rendered small on screen and few crossed this threshold at once.
-    // DEFAULT_ZOOM_RATIO (0.20, ~5x zoom-in) and NODE_SIZE_MULTIPLIER (2.5x)
-    // together mean far more nodes now exceed 8px on screen simultaneously,
-    // which is what caused labels to overlap into unreadable clutter in the
-    // default view. Raised so only the largest, highest-degree hub nodes
-    // label by default; smaller nodes still get labeled on click (via
-    // showInfo) or search, they just don't compete for space unprompted.
+    // ZOOM_RATIO_BY_PLATFORM (tight zoom-in) and NODE_SIZE_MULTIPLIER_BY_PLATFORM
+    // (larger markers) together mean far more nodes now exceed 8px on screen
+    // simultaneously, which is what caused labels to overlap into unreadable
+    // clutter in the default view. Raised so only the largest, highest-degree
+    // hub nodes label by default; smaller nodes still get labeled on click
+    // (via showInfo) or search, they just don't compete for space unprompted.
     labelRenderedSizeThreshold: 24,
     defaultNodeColor: "#6b7c85",
     defaultEdgeColor: EDGE_COLOR_NORMAL,
@@ -784,11 +795,13 @@ function mountRenderer(platform, graph){
   // means "auto-fit to show 100% of the graph's current bounding box" -- that
   // auto-fit is exactly what was canceling out any expansion factor, and it's
   // also just not the view that looks right for this data. Setting an
-  // explicit, deliberately small ratio here (DEFAULT_ZOOM_RATIO) means the
+  // explicit, deliberately small ratio here (ZOOM_RATIO_BY_PLATFORM) means the
   // camera always opens zoomed in on the graph's own center, regardless of
   // how large the current tag's coordinate spread is -- this is what actually
-  // reproduces the confirmed-good preview.
-  st.renderer.getCamera().setState({ x: 0.5, y: 0.5, ratio: DEFAULT_ZOOM_RATIO, angle: 0 });
+  // reproduces the confirmed-good preview. Now resolved per platform rather
+  // than from a single shared constant (see top of file for rationale).
+  const zoomRatio = ZOOM_RATIO_BY_PLATFORM[platform] ?? DEFAULT_ZOOM_RATIO;
+  st.renderer.getCamera().setState({ x: 0.5, y: 0.5, ratio: zoomRatio, angle: 0 });
 }
 
 // Builds the Expand control's buttons from whatever expansion tags are actually
