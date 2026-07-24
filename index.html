@@ -94,12 +94,32 @@
   }
   .expand-control button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-  .save-png-btn{
-    background:var(--panel);border:1px solid var(--panel-line);color:var(--ink);
-    font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:6px;cursor:pointer;
+  /* Floating graph toolbar (Plotly-modebar style), top-right of each graph.
+     Mirrors the controls the Topic Modeling plotly embeds get for free. */
+  .graph-toolbar{
+    position:absolute;right:16px;top:16px;z-index:11;display:flex;gap:4px;
+    background:#ffffff;border:1px solid var(--panel-line);border-radius:8px;
+    padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
   }
-  .save-png-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .save-png-btn:disabled{opacity:.5;cursor:default;}
+  .graph-toolbar button{
+    display:flex;align-items:center;justify-content:center;width:30px;height:30px;
+    background:none;border:none;border-radius:6px;cursor:pointer;color:var(--muted);
+    padding:0;
+  }
+  .graph-toolbar button:hover{background:var(--panel);color:var(--accent);}
+  .graph-toolbar button svg{width:16px;height:16px;display:block;}
+
+  /* Key Insight banner: one-line headline result, top-left of each graph. */
+  .key-insight{
+    position:absolute;left:16px;top:16px;z-index:10;max-width:min(420px, 46vw);
+    background:#ffffff;border:1px solid var(--panel-line);border-left:3px solid var(--accent);
+    border-radius:8px;padding:10px 13px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  }
+  .key-insight .ki-label{
+    font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:3px;
+  }
+  .key-insight .ki-text{font-size:12px;line-height:1.45;color:var(--ink);}
 
   /* width is fluid (shrinks with the viewport / whatever space the sidebar
      leaves) rather than a fixed 250px, so it doesn't overflow or collide with
@@ -198,8 +218,18 @@
     #nav-overlay.visible{display:block;}
     .page{padding:64px 20px 24px 20px;}
     .net-header{padding-left:56px;flex-wrap:wrap;gap:8px;}
-    .search-box{width:calc(100vw - 32px);left:16px;right:16px;top:auto;bottom:auto;position:absolute;top:16px;}
-    .left-rail{width:calc(100vw - 32px);left:16px;right:16px;max-height:40%;bottom:auto;top:calc(16px + 54px);}
+    /* Stack the graph overlays vertically so they never sit on top of each
+       other on a narrow screen: toolbar pinned top-right, key insight below
+       the mobile menu button, search under that, rail under the search. */
+    .graph-toolbar{top:12px;right:12px;}
+    .key-insight{
+      left:16px;right:16px;top:56px;max-width:none;
+    }
+    .search-box{
+      width:calc(100vw - 32px);left:16px;right:16px;position:absolute;
+      top:auto;bottom:auto;top:150px;
+    }
+    .left-rail{width:calc(100vw - 32px);left:16px;right:16px;max-height:36%;bottom:auto;top:212px;}
     .info-panel{width:calc(100vw - 32px);left:16px;right:16px;}
   }
 </style>
@@ -276,11 +306,20 @@
         </div>
         <div style="display:flex;align-items:center;gap:14px;">
           <div class="expand-control" id="expand-control-facebook"></div>
-          <button class="save-png-btn" data-save-png="facebook">Save PNG</button>
         </div>
       </div>
 
       <div class="graph-container" id="graph-container-facebook">
+        <div class="key-insight" id="key-insight-facebook">
+          <div class="ki-label">Key insight</div>
+          <div class="ki-text">Public health and government accounts form the dense core of the Facebook conversation, while vaccine-safety skeptics sit in smaller clusters on the periphery rather than at the center of discussion.</div>
+        </div>
+        <div class="graph-toolbar" id="graph-toolbar-facebook" aria-label="Graph controls">
+          <button data-tool="zoom-in" data-tool-platform="facebook" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
+          <button data-tool="zoom-out" data-tool-platform="facebook" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
+          <button data-tool="auto-scale" data-tool-platform="facebook" title="Auto scale" aria-label="Auto scale"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 9 4 4 9 4"/><polyline points="20 9 20 4 15 4"/><polyline points="4 15 4 20 9 20"/><polyline points="20 15 20 20 15 20"/></svg></button>
+          <button data-tool="download-png" data-tool-platform="facebook" title="Download as PNG" aria-label="Download as PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M5 21h14"/></svg></button>
+        </div>
         <div class="loading" id="loading-facebook"><div class="mark">Loading network</div></div>
         <div class="empty-state" id="empty-state-facebook"><div class="mark"></div></div>
 
@@ -341,11 +380,20 @@
         </div>
         <div style="display:flex;align-items:center;gap:14px;">
           <div class="expand-control" id="expand-control-tiktok"></div>
-          <button class="save-png-btn" data-save-png="tiktok">Save PNG</button>
         </div>
       </div>
 
       <div class="graph-container" id="graph-container-tiktok">
+        <div class="key-insight" id="key-insight-tiktok">
+          <div class="ki-label">Key insight</div>
+          <div class="ki-text">TikTok's HPV conversation splits between professional health advocacy and viral commercial home-remedy content, with general sexual-health literacy acting as the bridge that links the two communities.</div>
+        </div>
+        <div class="graph-toolbar" id="graph-toolbar-tiktok" aria-label="Graph controls">
+          <button data-tool="zoom-in" data-tool-platform="tiktok" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
+          <button data-tool="zoom-out" data-tool-platform="tiktok" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
+          <button data-tool="auto-scale" data-tool-platform="tiktok" title="Auto scale" aria-label="Auto scale"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 9 4 4 9 4"/><polyline points="20 9 20 4 15 4"/><polyline points="4 15 4 20 9 20"/><polyline points="20 15 20 20 15 20"/></svg></button>
+          <button data-tool="download-png" data-tool-platform="tiktok" title="Download as PNG" aria-label="Download as PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M5 21h14"/></svg></button>
+        </div>
         <div class="loading" id="loading-tiktok"><div class="mark">Loading network</div></div>
         <div class="empty-state" id="empty-state-tiktok"><div class="mark"></div></div>
 
@@ -541,8 +589,40 @@ function saveNetworkPng(platform){
   }, "image/png");
 }
 
-document.querySelectorAll("[data-save-png]").forEach(btn => {
-  btn.addEventListener("click", () => saveNetworkPng(btn.dataset.savePng));
+// Graph toolbar: mirrors the zoom/pan/download controls the plotly Topic
+// Modeling embeds get for free. Sigma's camera ratio is inverse to zoom level
+// (smaller ratio = more zoomed in), so "zoom in" multiplies the ratio down.
+function zoomBy(platform, factor){
+  const st = PLATFORM_STATE[platform];
+  if(!st || !st.renderer) return;
+  const cam = st.renderer.getCamera();
+  const next = Math.min(Math.max(cam.ratio * factor, 0.01), 500);
+  cam.animate({ ratio: next }, { duration: 250 });
+}
+
+// Auto scale: reframe to the platform's default center + ratio (the same view
+// mountRenderer sets on first load), NOT Sigma's fit-to-100% reset, which would
+// zoom out to include the far outliers and undo the tuned framing.
+function autoScale(platform){
+  const st = PLATFORM_STATE[platform];
+  if(!st || !st.renderer) return;
+  const zoomRatio = ZOOM_RATIO_BY_PLATFORM[platform] ?? DEFAULT_ZOOM_RATIO;
+  st.renderer.getCamera().animate(
+    { x: 0.5, y: 0.5, ratio: zoomRatio, angle: 0 },
+    { duration: 300 }
+  );
+}
+
+document.querySelectorAll(".graph-toolbar button[data-tool]").forEach(btn => {
+  const platform = btn.dataset.toolPlatform;
+  btn.addEventListener("click", () => {
+    switch(btn.dataset.tool){
+      case "zoom-in":      zoomBy(platform, 0.6); break;   // ratio down = closer
+      case "zoom-out":     zoomBy(platform, 1.6); break;   // ratio up = farther
+      case "auto-scale":   autoScale(platform); break;
+      case "download-png": saveNetworkPng(platform); break;
+    }
+  });
 });
 
 function applyDefaultRailCollapse(){
@@ -639,6 +719,7 @@ function freshPlatformState(){
     initialized: false,
     cache: null,            // { nodes, edges, meta } once fetched
     topicsChecked: false,
+    _highlight: null,       // id of the searched/clicked node whose label is forced
   };
 }
 const PLATFORM_STATE = { facebook: freshPlatformState(), tiktok: freshPlatformState() };
@@ -855,9 +936,24 @@ function mountRenderer(platform, graph){
     defaultEdgeColor: EDGE_COLOR_NORMAL,
     labelColor: { color: "#1a2327" },
     renderEdgeLabels: false,
+    // Node reducer: when an actor is found via search (or clicked), st._highlight
+    // holds its id. Force that node's label to render regardless of the size
+    // threshold, and bump it slightly so the name is legible even for a small,
+    // low-degree node the default view would never label. This is what makes a
+    // searched actor's ACTUAL NAME appear on the graph, not just the info panel.
+    nodeReducer: (node, data) => {
+      if(st._highlight === node){
+        return { ...data, forceLabel: true, highlighted: true,
+                 size: Math.max(data.size, 8) * 1.4, zIndex: 1 };
+      }
+      return data;
+    },
   });
   st.renderer.on("clickNode", ({ node }) => showInfo(platform, node));
-  st.renderer.on("clickStage", () => byId("info-panel", platform).classList.remove("visible"));
+  st.renderer.on("clickStage", () => {
+    byId("info-panel", platform).classList.remove("visible");
+    if(st._highlight){ st._highlight = null; st.renderer.refresh(); }
+  });
   // Sigma's animatedReset() resets the camera to ratio=1, which by definition
   // means "auto-fit to show 100% of the graph's current bounding box" -- that
   // auto-fit is exactly what was canceling out any expansion factor, and it's
@@ -1003,15 +1099,28 @@ function showInfo(platform, nodeId){
 
   byId("info-panel", platform).classList.add("visible");
 
+  // Force this node's name label to show, then repaint so the reducer runs.
+  st._highlight = nodeId;
+  st.renderer.refresh();
+
+  // Zoom to a fixed CLOSE ratio rather than multiplying the current one down.
+  // The old `ratio * 0.6` barely moved if the user was already zoomed in, so a
+  // found actor could stay tiny and un-centered. An absolute target guarantees
+  // the node ends up large and centered every time, regardless of prior zoom.
   const pos = st.renderer.getNodeDisplayData(nodeId);
   st.renderer.getCamera().animate(
-    { x: pos.x, y: pos.y, ratio: Math.max(st.renderer.getCamera().ratio * 0.6, 0.08) },
-    { duration: 400 }
+    { x: pos.x, y: pos.y, ratio: 0.06 },
+    { duration: 500 }
   );
 }
 
 document.querySelectorAll("[data-close-info]").forEach(btn => {
-  btn.addEventListener("click", () => byId("info-panel", btn.dataset.closeInfo).classList.remove("visible"));
+  btn.addEventListener("click", () => {
+    const platform = btn.dataset.closeInfo;
+    byId("info-panel", platform).classList.remove("visible");
+    const st = PLATFORM_STATE[platform];
+    if(st && st._highlight){ st._highlight = null; if(st.renderer) st.renderer.refresh(); }
+  });
 });
 
 ["facebook", "tiktok"].forEach(platform => {
