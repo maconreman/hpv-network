@@ -94,6 +94,13 @@
   }
   .expand-control button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
+  .save-png-btn{
+    background:var(--panel);border:1px solid var(--panel-line);color:var(--ink);
+    font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:6px;cursor:pointer;
+  }
+  .save-png-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .save-png-btn:disabled{opacity:.5;cursor:default;}
+
   /* width is fluid (shrinks with the viewport / whatever space the sidebar
      leaves) rather than a fixed 250px, so it doesn't overflow or collide with
      the search box at narrower desktop widths — not just below the 768px
@@ -269,6 +276,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:14px;">
           <div class="expand-control" id="expand-control-facebook"></div>
+          <button class="save-png-btn" data-save-png="facebook">Save PNG</button>
         </div>
       </div>
 
@@ -333,6 +341,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:14px;">
           <div class="expand-control" id="expand-control-tiktok"></div>
+          <button class="save-png-btn" data-save-png="tiktok">Save PNG</button>
         </div>
       </div>
 
@@ -482,6 +491,58 @@ document.querySelectorAll("[data-rail-toggle]").forEach(toggle => {
   toggle.addEventListener("click", () => {
     byId("left-rail", platform).classList.toggle("collapsed");
   });
+});
+
+// PNG export. Right-click "Save image" on a WebGL canvas returns blank white
+// because the browser clears the drawing buffer after each frame, and even
+// when it doesn't, Sigma stacks nodes / edges / labels on SEPARATE canvases,
+// so a single right-click only grabs one transparent layer. This composites
+// every Sigma canvas onto one white background and downloads the result.
+function saveNetworkPng(platform){
+  const st = PLATFORM_STATE[platform];
+  if(!st || !st.renderer){ return; }
+  const container = byId("graph-container", platform);
+  // Force a synchronous redraw so every layer's buffer is populated at grab
+  // time (Sigma 2 renders on demand; without this the composite can read a
+  // stale or cleared WebGL buffer and export blank).
+  try{ st.renderer.refresh(); }catch(_){ /* older API, ignore */ }
+  const canvases = container.querySelectorAll("canvas");
+  if(!canvases.length){ return; }
+
+  // Match the on-screen pixel size (accounting for device pixel ratio, which
+  // Sigma bakes into its backing canvases so the export is crisp, not blurry).
+  const first = canvases[0];
+  const out = document.createElement("canvas");
+  out.width = first.width;
+  out.height = first.height;
+  const ctx = out.getContext("2d");
+
+  // White background first — otherwise transparent areas save as black in some
+  // viewers and as nothing in others.
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, out.width, out.height);
+
+  // Composite each layer in DOM order (edges under nodes under labels).
+  canvases.forEach(c => {
+    try{ ctx.drawImage(c, 0, 0, out.width, out.height); }catch(_){ /* skip */ }
+  });
+
+  out.toBlob(blob => {
+    if(!blob){ return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const tag = (st.currentTag || "1x");
+    a.href = url;
+    a.download = `${platform}_network_${tag}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, "image/png");
+}
+
+document.querySelectorAll("[data-save-png]").forEach(btn => {
+  btn.addEventListener("click", () => saveNetworkPng(btn.dataset.savePng));
 });
 
 function applyDefaultRailCollapse(){
