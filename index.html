@@ -156,7 +156,9 @@
   .fb-note.visible{display:block;}
   .fb-note code{font-family:var(--mono);font-size:10px;color:var(--ink);}
 
-  .search-box{position:absolute;right:16px;top:16px;z-index:10;width:230px;}
+  /* Sits to the LEFT of the graph toolbar (4 buttons ~= 148px incl. gaps and
+     border), so the two top-right controls don't overlap. */
+  .search-box{position:absolute;right:172px;top:16px;z-index:10;width:230px;}
   .search-box input{
     width:100%;background:#fff;border:1px solid var(--panel-line);border-radius:8px;
     padding:10px 12px;color:var(--ink);font-family:var(--mono);font-size:12px;outline:none;
@@ -219,18 +221,44 @@
     .page{padding:64px 20px 24px 20px;}
     .net-header{padding-left:56px;flex-wrap:wrap;gap:8px;}
     /* Stack the graph overlays vertically so they never sit on top of each
-       other on a narrow screen: toolbar pinned top-right, key insight below
-       the mobile menu button, search under that, rail under the search. */
-    .graph-toolbar{top:12px;right:12px;}
+       other on a narrow screen. On phones the graph area is small, so panels
+       must NOT stack persistently down the screen and bury the network. The
+       toolbar stays pinned top-right (compact), the key insight becomes a
+       collapsible strip pinned top-left, search sits just below the menu row,
+       and the rail defaults collapsed to a single tappable header. */
+    .graph-toolbar{top:10px;right:10px;gap:2px;padding:3px;}
+    .graph-toolbar button{width:34px;height:34px;}  /* larger tap target */
+
+    /* Collapsible on mobile: only the label shows until tapped. */
     .key-insight{
-      left:16px;right:16px;top:56px;max-width:none;
+      left:12px;top:56px;right:auto;max-width:calc(100vw - 120px);
+      padding:7px 10px;
     }
+    .key-insight .ki-text{
+      display:none;font-size:11.5px;margin-top:4px;
+    }
+    .key-insight.open .ki-text{display:block;}
+    .key-insight .ki-label{margin-bottom:0;cursor:pointer;}
+    .key-insight .ki-label::after{content:" \25B8";font-size:8px;}
+    .key-insight.open .ki-label::after{content:" \25BE";}
+
+    /* Search: full width, directly under the menu button row. */
     .search-box{
-      width:calc(100vw - 32px);left:16px;right:16px;position:absolute;
-      top:auto;bottom:auto;top:150px;
+      width:calc(100vw - 24px);left:12px;right:12px;position:absolute;
+      top:auto;bottom:auto;top:104px;
     }
-    .left-rail{width:calc(100vw - 32px);left:16px;right:16px;max-height:36%;bottom:auto;top:212px;}
-    .info-panel{width:calc(100vw - 32px);left:16px;right:16px;}
+    .search-results{max-height:150px;}
+
+    /* Rail: anchored to the BOTTOM (not stacked mid-screen), collapsed by
+       default so it's just a tappable header until the user opens it. Its
+       max-height only applies once expanded. */
+    .left-rail{
+      width:calc(100vw - 24px);left:12px;right:12px;
+      top:auto;bottom:12px;max-height:44%;
+    }
+    .info-panel{
+      width:calc(100vw - 24px);left:12px;right:12px;bottom:12px;
+    }
   }
 </style>
 </head>
@@ -541,6 +569,15 @@ document.querySelectorAll("[data-rail-toggle]").forEach(toggle => {
   });
 });
 
+// Key insight: on mobile the body is hidden and the label acts as a toggle
+// (see .key-insight .ki-text display rules in the mobile media query). On
+// desktop the body is always visible, so this toggle is harmless there.
+document.querySelectorAll(".key-insight .ki-label").forEach(label => {
+  label.addEventListener("click", () => {
+    label.closest(".key-insight").classList.toggle("open");
+  });
+});
+
 // PNG export. Right-click "Save image" on a WebGL canvas returns blank white
 // because the browser clears the drawing buffer after each frame, and even
 // when it doesn't, Sigma stacks nodes / edges / labels on SEPARATE canvases,
@@ -606,7 +643,7 @@ function zoomBy(platform, factor){
 function autoScale(platform){
   const st = PLATFORM_STATE[platform];
   if(!st || !st.renderer) return;
-  const zoomRatio = ZOOM_RATIO_BY_PLATFORM[platform] ?? DEFAULT_ZOOM_RATIO;
+  const zoomRatio = defaultZoomFor(platform);
   st.renderer.getCamera().animate(
     { x: 0.5, y: 0.5, ratio: zoomRatio, angle: 0 },
     { duration: 300 }
@@ -920,6 +957,10 @@ function mountRenderer(platform, graph){
   const st = PLATFORM_STATE[platform];
   if(st.renderer){ st.renderer.kill(); st.renderer = null; }
   const container = byId("graph-container", platform);
+  // On a narrow phone canvas the same node/label density that reads fine on
+  // desktop overlaps into clutter, so raise the label threshold there: only the
+  // very largest hubs label by default, and the rest stay tappable/searchable.
+  const isMobile = window.innerWidth <= 768;
   st.renderer = new Sigma(graph, container, {
     minCameraRatio: 0.01,
     maxCameraRatio: 500,
@@ -931,7 +972,8 @@ function mountRenderer(platform, graph){
     // clutter in the default view. Raised so only the largest, highest-degree
     // hub nodes label by default; smaller nodes still get labeled on click
     // (via showInfo) or search, they just don't compete for space unprompted.
-    labelRenderedSizeThreshold: 24,
+    // Higher still on mobile, where screen space per node is far smaller.
+    labelRenderedSizeThreshold: isMobile ? 34 : 24,
     defaultNodeColor: "#6b7c85",
     defaultEdgeColor: EDGE_COLOR_NORMAL,
     labelColor: { color: "#1a2327" },
@@ -962,9 +1004,17 @@ function mountRenderer(platform, graph){
   // camera always opens zoomed in on the graph's own center, regardless of
   // how large the current tag's coordinate spread is -- this is what actually
   // reproduces the confirmed-good preview. Now resolved per platform rather
-  // than from a single shared constant (see top of file for rationale).
-  const zoomRatio = ZOOM_RATIO_BY_PLATFORM[platform] ?? DEFAULT_ZOOM_RATIO;
+  // than from a single shared constant (see top of file for rationale), and
+  // widened slightly on mobile so the crowded network isn't jammed edge to edge.
+  const zoomRatio = defaultZoomFor(platform);
   st.renderer.getCamera().setState({ x: 0.5, y: 0.5, ratio: zoomRatio, angle: 0 });
+}
+
+// Per-platform opening zoom, widened on mobile. 1.35x ratio = ~35% more of the
+// layout visible, giving nodes/labels more room on a small screen.
+function defaultZoomFor(platform){
+  const base = ZOOM_RATIO_BY_PLATFORM[platform] ?? DEFAULT_ZOOM_RATIO;
+  return window.innerWidth <= 768 ? base * 1.35 : base;
 }
 
 // Builds the Expand control's buttons from whatever expansion tags are actually
