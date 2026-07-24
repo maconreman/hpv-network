@@ -554,12 +554,12 @@ const EDGE_COLOR_SELFLOOP = "#8fa3ad80"; // muted gray, ~50% opacity
 // TikTok crams Facebook's much sparser (751-edge) graph into a tiny corner,
 // and vice versa. DEFAULT_ZOOM_RATIO / NODE_SIZE_MULTIPLIER remain as
 // fallbacks for any platform key not listed below.
-const ZOOM_RATIO_BY_PLATFORM = { facebook: 0.40, tiktok: 0.20 };
+const ZOOM_RATIO_BY_PLATFORM = { facebook: 0.20, tiktok: 0.20 };
 const NODE_SIZE_MULTIPLIER_BY_PLATFORM = { facebook: 1.5, tiktok: 0.5 };
 // Edge width multiplier, per platform. TikTok has ~12,869 edges vs Facebook's
 // ~751, so identical widths turn TikTok into a dense mat that buries the nodes.
 // Thinner lines there let the structure show through. 1.0 = unchanged.
-const EDGE_WIDTH_MULTIPLIER_BY_PLATFORM = { facebook: 1.5, tiktok: 0.3 };
+const EDGE_WIDTH_MULTIPLIER_BY_PLATFORM = { facebook: 2.5, tiktok: 0.2 };
 const DEFAULT_ZOOM_RATIO = 0.20;      // fallback if a platform key is missing
 const NODE_SIZE_MULTIPLIER = 2.5;     // fallback
 const EDGE_WIDTH_MULTIPLIER = 1.0;    // fallback
