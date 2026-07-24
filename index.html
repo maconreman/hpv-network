@@ -554,10 +554,15 @@ const EDGE_COLOR_SELFLOOP = "#8fa3ad80"; // muted gray, ~50% opacity
 // TikTok crams Facebook's much sparser (751-edge) graph into a tiny corner,
 // and vice versa. DEFAULT_ZOOM_RATIO / NODE_SIZE_MULTIPLIER remain as
 // fallbacks for any platform key not listed below.
-const ZOOM_RATIO_BY_PLATFORM = { facebook: 0.20, tiktok: 0.20 };
+const ZOOM_RATIO_BY_PLATFORM = { facebook: 0.40, tiktok: 0.20 };
 const NODE_SIZE_MULTIPLIER_BY_PLATFORM = { facebook: 1.5, tiktok: 0.5 };
+// Edge width multiplier, per platform. TikTok has ~12,869 edges vs Facebook's
+// ~751, so identical widths turn TikTok into a dense mat that buries the nodes.
+// Thinner lines there let the structure show through. 1.0 = unchanged.
+const EDGE_WIDTH_MULTIPLIER_BY_PLATFORM = { facebook: 1.5, tiktok: 0.3 };
 const DEFAULT_ZOOM_RATIO = 0.20;      // fallback if a platform key is missing
 const NODE_SIZE_MULTIPLIER = 2.5;     // fallback
+const EDGE_WIDTH_MULTIPLIER = 1.0;    // fallback
 
 // One isolated state object per platform: its own graph, renderer, cached data,
 // and current expansion tag. Nothing here is shared across platforms.
@@ -709,13 +714,14 @@ function buildGraph(platform, nodes, edges, cfg, meta){
       });
     });
 
+    const edgeMult = EDGE_WIDTH_MULTIPLIER_BY_PLATFORM[platform] ?? EDGE_WIDTH_MULTIPLIER;
     edges.forEach((e, i) => {
       if(!graph.hasNode(e.source) || !graph.hasNode(e.target)) return;
       try{
         graph.addEdgeWithKey("e" + i, e.source, e.target, {
           type: directed ? "arrow" : "line",
           weight: e.weight || 1,
-          size: Math.min(0.6 + Math.log(1 + (e.weight||1)) * 0.5, 3.5),
+          size: Math.min(0.6 + Math.log(1 + (e.weight||1)) * 0.5, 3.5) * edgeMult,
           color: e.is_selfloop ? EDGE_COLOR_SELFLOOP : EDGE_COLOR_NORMAL,
         });
       }catch(_){ /* skip malformed edge */ }
